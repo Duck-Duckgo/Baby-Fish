@@ -1,0 +1,336 @@
+ <!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>人才地图系统</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6',
+                        secondary: '#10b981'
+                    },
+                    borderRadius: {
+                        'none': '0px',
+                        'sm': '2px',
+                        DEFAULT: '4px',
+                        'md': '8px',
+                        'lg': '12px',
+                        'xl': '16px',
+                        '2xl': '20px',
+                        '3xl': '24px',
+                        'full': '9999px',
+                        'button': '4px'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .map-bg {
+            background-image: url('https://ai-public.mastergo.com/gen_page/map_placeholder_1280x720.png');
+            background-size: cover;
+            background-position: center;
+            opacity: 0.05;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: -1;
+        }
+
+        body {
+            min-height: 1024px;
+            background-color: #f8fafc;
+        }
+
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .education-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            margin-top: 4px;
+            background-color: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .education-dropdown.active {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+        .dropdown-item:hover {
+            background-color: #f3f4f6;
+        }
+    </style>
+</head>
+<body>
+    <div class="w-[1440px] mx-auto">
+        <div class="map-bg"></div>
+        <header class="h-16 flex items-center justify-between px-8 bg-white shadow-sm">
+            <div class="flex items-center gap-2">
+                <span class="text-2xl font-['Pacifico'] text-primary">logo</span>
+                <span class="text-xl font-medium text-gray-800">人才地图系统</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <span class="text-gray-600">欢迎，张晓明</span>
+                <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                    <i class="fas fa-user text-gray-400"></i>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex flex-col items-center justify-center min-h-[calc(100vh-64px)]">
+            <div class="w-full max-w-4xl space-y-12">
+                <h1 class="text-center text-4xl font-bold text-gray-800">开始使用人才地图系统</h1>
+                <p class="text-center text-gray-600 text-lg">上传简历或企业架构，开启智能人才管理之旅</p>
+                
+                <div class="flex justify-center gap-8">
+                    <!-- 在线填写简历 -->
+                    <div class="group relative">
+                        <button onclick="showResumeForm()" class="flex flex-col items-center p-12 bg-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-primary hover:scale-105">
+                            <div class="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+                                <i class="fas fa-pen-to-square text-4xl text-primary"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold text-gray-800 mb-2">在线填写简历</h3>
+                            <p class="text-gray-600 text-center max-w-xs">使用在线表单填写简历，系统将自动生成标准格式</p>
+                        </button>
+                    </div>
+
+                    <!-- 上传简历 -->
+                    <div class="group relative">
+                        <input id="resumeUpload" type="file" multiple accept=".pdf,.doc,.docx,.xls,.xlsx" class="hidden" onchange="handleFiles(event)">
+                        <button onclick="document.getElementById('resumeUpload').click()" class="flex flex-col items-center p-12 bg-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-primary hover:scale-105">
+                            <div class="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+                                <i class="fas fa-file-upload text-4xl text-primary"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold text-gray-800 mb-2">上传简历</h3>
+                            <p class="text-gray-600 text-center max-w-xs">支持批量上传简历文件，系统将自动分析并构建人才数据库</p>
+                        </button>
+                        <div id="dropArea" style="display: none;" class="absolute top-0 left-0 right-0 bottom-0 bg-white rounded-lg shadow-lg border-2 border-dashed border-primary p-8 flex flex-col items-center justify-center gap-4">
+                            <i class="fas fa-cloud-upload-alt text-4xl text-primary"></i>
+                            <p class="text-gray-600 text-center">将文件拖放到此处，或点击上传</p>
+                            <div class="grid grid-cols-2 gap-4 w-full max-w-md">
+                                <div class="bg-gray-50 p-4 rounded-lg flex items-center gap-2">
+                                    <i class="fas fa-file-pdf text-red-500"></i>
+                                    <span>简历模板.pdf</span>
+                                </div>
+                                <div class="bg-gray-50 p-4 rounded-lg flex items-center gap-2">
+                                    <i class="fas fa-file-word text-blue-500"></i>
+                                    <span>简历模板.docx</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 上传企业架构 -->
+                    <div class="group">
+                        <button onclick="showOrgStructureModal()" class="flex flex-col items-center p-12 bg-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-secondary hover:scale-105">
+                            <div class="w-24 h-24 rounded-full bg-secondary/10 flex items-center justify-center mb-6">
+                                <i class="fas fa-sitemap text-4xl text-secondary"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold text-gray-800 mb-2">上传企业架构</h3>
+                            <p class="text-gray-600 text-center max-w-xs">导入企业组织架构，帮助系统更好地进行人才匹配与分析</p>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="text-center text-gray-500 mt-12 mb-8">
+                    <p>支持格式：PDF、DOC、DOCX、XLS、XLSX</p>
+                    <p class="mt-2">单次上传文件大小不超过 10MB</p>
+                </div>
+            </div>
+        </main>
+
+        <!-- 简历表单弹窗 -->
+        <div id="resumeFormModal" class="modal">
+            <div class="bg-white rounded-lg w-[800px] max-h-[90vh] overflow-y-auto p-8 relative">
+                <button onclick="hideResumeForm()" class="absolute right-4 top-4 text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">填写个人简历</h2>
+                <form id="resumeForm" class="space-y-6">
+                    <div class="grid grid-cols-2 gap-6">
+                        <div class="space-y-2">
+                            <label class="block text-sm font-medium text-gray-700">姓名</label>
+                            <input type="text" name="name" class="w-full px-4 py-2 border border-gray-300 rounded-button focus:outline-none focus:ring-2 focus:ring-primary/50">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="block text-sm font-medium text-gray-700">性别</label>
+                            <div class="flex gap-4">
+                                <label class="flex items-center gap-2">
+                                    <input type="radio" name="gender" value="male" class="w-4 h-4 text-primary">
+                                    <span>男</span>
+                                </label>
+                                <label class="flex items-center gap-2">
+                                    <input type="radio" name="gender" value="female" class="w-4 h-4 text-primary">
+                                    <span>女</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="block text-sm font-medium text-gray-700">出生年月</label>
+                            <input type="date" name="birthdate" class="w-full px-4 py-2 border border-gray-300 rounded-button focus:outline-none focus:ring-2 focus:ring-primary/50">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="block text-sm font-medium text-gray-700">手机号码</label>
+                            <input type="tel" name="phone" class="w-full px-4 py-2 border border-gray-300 rounded-button focus:outline-none focus:ring-2 focus:ring-primary/50">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="block text-sm font-medium text-gray-700">电子邮箱</label>
+                            <input type="email" name="email" class="w-full px-4 py-2 border border-gray-300 rounded-button focus:outline-none focus:ring-2 focus:ring-primary/50">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="block text-sm font-medium text-gray-700">最高学历</label>
+                            <div class="relative">
+                                <button type="button" onclick="toggleEducationDropdown()" class="w-full px-4 py-2 border border-gray-300 rounded-button focus:outline-none focus:ring-2 focus:ring-primary/50 text-left flex justify-between items-center">
+                                    <span id="selectedEducation">请选择</span>
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                                <div id="educationDropdown" class="education-dropdown">
+                                    <div class="dropdown-item" onclick="selectEducation('博士')">博士</div>
+                                    <div class="dropdown-item" onclick="selectEducation('硕士')">硕士</div>
+                                    <div class="dropdown-item" onclick="selectEducation('本科')">本科</div>
+                                    <div class="dropdown-item" onclick="selectEducation('其他')">其他</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700">工作经验</label>
+                        <textarea name="experience" rows="4" class="w-full px-4 py-2 border border-gray-300 rounded-button focus:outline-none focus:ring-2 focus:ring-primary/50" placeholder="请详细描述您的工作经历..."></textarea>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700">教育背景</label>
+                        <textarea name="educationBackground" rows="4" class="w-full px-4 py-2 border border-gray-300 rounded-button focus:outline-none focus:ring-2 focus:ring-primary/50" placeholder="请详细描述您的教育经历..."></textarea>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700">技能特长</label>
+                        <textarea name="skills" rows="4" class="w-full px-4 py-2 border border-gray-300 rounded-button focus:outline-none focus:ring-2 focus:ring-primary/50" placeholder="请列出您掌握的专业技能..."></textarea>
+                    </div>
+                    <div class="flex justify-end gap-4">
+                        <button type="button" onclick="hideResumeForm()" class="px-6 py-2 border border-gray-300 rounded-button text-gray-700 hover:bg-gray-50 !rounded-button whitespace-nowrap">取消</button>
+                        <button type="submit" class="px-6 py-2 bg-primary text-white rounded-button hover:bg-primary/90 !rounded-button whitespace-nowrap">提交简历</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 组织架构弹窗 -->
+        <div id="orgStructureModal" class="modal">
+            <div class="bg-white rounded-lg w-[1000px] max-h-[90vh] overflow-y-auto p-8 relative">
+                <button onclick="hideOrgStructureModal()" class="absolute right-4 top-4 text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">企业组织架构模板</h2>
+                <img src="https://ai-public.mastergo.com/ai/img_res/a7b8251e6cbb75753c559e67216a3149.jpg" alt="企业组织架构模板" class="w-full rounded-lg shadow-lg">
+                <div class="flex justify-end gap-4 mt-6">
+                    <button type="button" onclick="hideOrgStructureModal()" class="px-6 py-2 border border-gray-300 rounded-button text-gray-700 hover:bg-gray-50 !rounded-button whitespace-nowrap">关闭</button>
+                    <button type="button" class="px-6 py-2 bg-primary text-white rounded-button hover:bg-primary/90 !rounded-button whitespace-nowrap">下载模板</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const resumeFormModal = document.getElementById('resumeFormModal');
+            const orgStructureModal = document.getElementById('orgStructureModal');
+            const dropArea = document.getElementById('dropArea');
+            const educationDropdown = document.getElementById('educationDropdown');
+            const selectedEducation = document.getElementById('selectedEducation');
+            const resumeForm = document.getElementById('resumeForm');
+            function showResumeForm() {
+                resumeFormModal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function hideResumeForm() {
+                resumeFormModal.classList.remove('active');
+                document.body.style.overflow = 'auto';
+            }
+
+            function showOrgStructureModal() {
+                orgStructureModal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function hideOrgStructureModal() {
+                orgStructureModal.classList.remove('active');
+                document.body.style.overflow = 'auto';
+            }
+
+            function toggleEducationDropdown() {
+                educationDropdown.classList.toggle('active');
+            }
+            function selectEducation(option) {
+                selectedEducation.textContent = option;
+                educationDropdown.classList.remove('active');
+            }
+
+            function handleFiles(event) {
+                const files = event.target.files;
+                if (files) {
+                    console.log('上传的文件:', files);
+                }
+            }
+
+            resumeForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(resumeForm);
+                console.log('提交的简历数据:', Object.fromEntries(formData));
+                hideResumeForm();
+            });
+
+            document.addEventListener('click', function(event) {
+                if (educationDropdown.classList.contains('active')) {
+                    const target = event.target;
+                    if (!target.closest('.relative')) {
+                        educationDropdown.classList.remove('active');
+                    }
+                }
+            });
+
+            window.showResumeForm = showResumeForm;
+            window.hideResumeForm = hideResumeForm;
+            window.showOrgStructureModal = showOrgStructureModal;
+            window.hideOrgStructureModal = hideOrgStructureModal;
+            window.toggleEducationDropdown = toggleEducationDropdown;
+            window.selectEducation = selectEducation;
+            window.handleFiles = handleFiles;
+        });
+    </script>
+</body>
+</html>
