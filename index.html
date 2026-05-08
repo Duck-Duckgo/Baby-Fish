@@ -1,12 +1,462 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>相册 · 轻互动</title>
+  <style>
+    :root {
+      --bg: #f4f2ef;
+      --surface: #ffffff;
+      --text: #1a1a1a;
+      --muted: #5c5c5c;
+      --accent: #c45c6a;
+      --accent-soft: rgba(196, 92, 106, 0.12);
+      --radius: 12px;
+      --shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+    }
+
+    [data-theme="slate"] {
+      --bg: #e8eef2;
+      --accent: #3d6b8c;
+      --accent-soft: rgba(61, 107, 140, 0.15);
+    }
+
+    [data-theme="olive"] {
+      --bg: #f0f1ea;
+      --accent: #6b7f4a;
+      --accent-soft: rgba(107, 127, 74, 0.18);
+    }
+
+    [data-theme="ink"] {
+      --bg: #12141a;
+      --surface: #1c2028;
+      --text: #ececec;
+      --muted: #a3a8b3;
+      --accent: #7eb8da;
+      --accent-soft: rgba(126, 184, 218, 0.2);
+      --shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      transition: background 0.35s ease, color 0.35s ease;
+    }
+
+    .page {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: clamp(1.25rem, 4vw, 2.5rem);
+    }
+
+    header {
+      margin-bottom: 1.5rem;
+    }
+
+    header h1 {
+      font-size: clamp(1.35rem, 4vw, 1.75rem);
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    header p {
+      margin-top: 0.35rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .layout {
+      display: grid;
+      gap: 1.75rem;
+      grid-template-columns: 1fr;
+    }
+
+    @media (min-width: 720px) {
+      .layout {
+        grid-template-columns: minmax(260px, 380px) 1fr;
+        align-items: start;
+      }
+    }
+
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1rem;
+      transition: background 0.35s ease, box-shadow 0.35s ease;
+    }
+
+    .photo-shell {
+      position: relative;
+      border-radius: calc(var(--radius) - 4px);
+      overflow: hidden;
+      cursor: pointer;
+      outline: none;
+      border: 2px solid transparent;
+      transition: border-color 0.2s ease, transform 0.15s ease;
+    }
+
+    .photo-shell:hover {
+      border-color: var(--accent-soft);
+    }
+
+    .photo-shell:focus-visible {
+      border-color: var(--accent);
+    }
+
+    .photo-shell:active {
+      transform: scale(0.985);
+    }
+
+    .photo-shell img {
+      width: 100%;
+      height: auto;
+      vertical-align: middle;
+      display: block;
+      transition: filter 0.35s ease, transform 0.35s ease;
+    }
+
+    .photo-shell[data-filter="0"] img { filter: none; }
+    .photo-shell[data-filter="1"] img { filter: grayscale(1) contrast(1.05); }
+    .photo-shell[data-filter="2"] img { filter: sepia(0.35) saturate(0.95); }
+    .photo-shell[data-filter="3"] img { filter: contrast(1.15) saturate(1.1); }
+    .photo-shell[data-filter="4"] img { filter: brightness(1.05) hue-rotate(-8deg); }
+
+    body.retro-on .photo-shell::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 3px,
+        rgba(0, 0, 0, 0.04) 3px,
+        rgba(0, 0, 0, 0.04) 5px
+      );
+      opacity: 0.55;
+    }
+
+    .photo-hint {
+      position: absolute;
+      bottom: 0.65rem;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.72rem;
+      color: #fff;
+      background: rgba(0, 0, 0, 0.45);
+      padding: 0.25rem 0.55rem;
+      border-radius: 999px;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.45);
+      transform: translate(-50%, -50%) scale(0);
+      pointer-events: none;
+      animation: ripple 0.55s ease-out forwards;
+    }
+
+    @keyframes ripple {
+      to {
+        transform: translate(-50%, -50%) scale(3);
+        opacity: 0;
+      }
+    }
+
+    .side h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      color: var(--muted);
+    }
+
+    .phrase {
+      font-size: clamp(1.05rem, 2.8vw, 1.25rem);
+      font-weight: 500;
+      min-height: 3.2em;
+      padding: 0.75rem 0;
+      border-left: 3px solid var(--accent);
+      padding-left: 1rem;
+      margin-bottom: 1.25rem;
+      background: linear-gradient(90deg, var(--accent-soft), transparent);
+      border-radius: 0 8px 8px 0;
+    }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    button {
+      font: inherit;
+      cursor: pointer;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      background: var(--surface);
+      color: var(--text);
+      padding: 0.45rem 0.85rem;
+      border-radius: 8px;
+      transition: background 0.2s, border-color 0.2s, transform 0.1s;
+    }
+
+    [data-theme="ink"] button {
+      border-color: rgba(255, 255, 255, 0.12);
+    }
+
+    button:hover {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    button:active {
+      transform: scale(0.97);
+    }
+
+    button.primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: transparent;
+    }
+
+    button.primary:hover {
+      filter: brightness(1.06);
+    }
+
+    button[aria-pressed="true"] {
+      border-color: var(--accent);
+      box-shadow: inset 0 0 0 1px var(--accent);
+    }
+
+    .stats {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-top: 0.5rem;
+    }
+
+    .stats strong {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    footer {
+      margin-top: 2.5rem;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(0, 0, 0, 0.06);
+      font-size: 0.78rem;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    [data-theme="ink"] footer {
+      border-top-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .floater {
+      position: fixed;
+      pointer-events: none;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--accent);
+      z-index: 50;
+      animation: floatUp 1s ease-out forwards;
+    }
+
+    @keyframes floatUp {
+      to {
+        transform: translateY(-48px);
+        opacity: 0;
+      }
+    }
+
+    .spark {
+      position: fixed;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 40;
+      animation: sparkFade 0.7s ease-out forwards;
+    }
+
+    @keyframes sparkFade {
+      to {
+        transform: translate(var(--dx), var(--dy)) scale(0);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<body data-theme="default">
+  <div class="page" id="page">
+    <header>
+      <h1>一张照片，几下点击</h1>
+      <p>界面偏干净，互动主要在按钮和照片上。</p>
+    </header>
+
+    <div class="layout">
+      <div class="card">
+        <div
+          class="photo-shell"
+          id="photoShell"
+          role="button"
+          tabindex="0"
+          data-filter="0"
+          aria-label="点击切换照片滤镜"
+        >
+          <img
+            id="heroImg"
+            src="ec60276c3aa7c53f3fdf124569e4b8ef.jpg"
+            alt="肖像照片"
+            width="520"
+            height="693"
+          />
+          <span class="photo-hint">点击照片 · 切换滤镜</span>
+        </div>
+      </div>
+
+      <div class="side card">
+        <h2>文案</h2>
+        <p class="phrase" id="phrase">今天在镜头前，表情自由一点也没关系。</p>
+
+        <div class="btn-row">
+          <button type="button" class="primary" id="btnPhrase">换一句</button>
+          <button type="button" id="btnLike">点个赞</button>
+        </div>
+
+        <h2>主题色</h2>
+        <div class="btn-row" role="group" aria-label="主题">
+          <button type="button" data-set-theme="default">玫瑰灰</button>
+          <button type="button" data-set-theme="slate">雾蓝</button>
+          <button type="button" data-set-theme="olive">橄榄</button>
+          <button type="button" data-set-theme="ink">深色</button>
+        </div>
+
+        <h2>小开关</h2>
+        <div class="btn-row">
+          <button type="button" id="btnRetro" aria-pressed="false">胶片划线</button>
+        </div>
+
+        <p class="stats" id="stats">
+          照片点了 <strong id="nPhoto">0</strong> 次 · 背景点了 <strong id="nBg">0</strong> 次 · 点赞 <strong id="nLike">0</strong>
+        </p>
+      </div>
+    </div>
+
+    <footer>
+      与 <code>ec60276c3aa7c53f3fdf124569e4b8ef.jpg</code> 放在同一目录后打开本页即可。
+    </footer>
+  </div>
+
+  <script>
+    (function () {
+      var shell = document.getElementById("photoShell");
+      var img = document.getElementById("heroImg");
+      var phraseEl = document.getElementById("phrase");
+      var nPhoto = document.getElementById("nPhoto");
+      var nBg = document.getElementById("nBg");
+      var nLike = document.getElementById("nLike");
+      var page = document.getElementById("page");
+      var btnRetro = document.getElementById("btnRetro");
+      var FILTER_MAX = 4;
+
+      var phrases = [
+        "今天在镜头前，表情自由一点也没关系。",
+        "不用太正经，开心会自己找到角度。",
+        "快门按下的瞬间，只剩下这一格真实。",
+        "想笑就笑，反正这是你的主场。",
+        "生活偶尔需要一点「超纲」的快乐。",
+      ];
+      var phraseIndex = 0;
+
+      var counts = { photo: 0, bg: 0, like: 0 };
+
+      function bumpPhoto() {
+        counts.photo += 1;
+        nPhoto.textContent = String(counts.photo);
+      }
+
+      function bumpBg() {
+        counts.bg += 1;
+        nBg.textContent = String(counts.bg);
+      }
+
+      function cycleFilter() {
+        var cur = parseInt(shell.getAttribute("data-filter"), 10) || 0;
+        var next = cur >= FILTER_MAX ? 0 : cur + 1;
+        shell.setAttribute("data-filter", String(next));
+        var labels = ["原图", "黑白", "暖复古", "更清晰", "微冷调"];
+        shell.setAttribute("aria-label", "滤镜：" + labels[next] + "，点击切换");
+      }
+
+      function addRipple(clientX, clientY) {
+        var r = shell.getBoundingClientRect();
+        var el = document.createElement("span");
+        el.className = "ripple";
+        el.style.left = clientX - r.left + "px";
+        el.style.top = clientY - r.top + "px";
+        el.style.width = el.style.height = "72px";
+        shell.appendChild(el);
+        setTimeout(function () { el.remove(); }, 600);
+      }
+
+      function onPhotoClick(e) {
+        e.stopPropagation();
+        cycleFilter();
+        bumpPhoto();
+        addRipple(e.clientX, e.clientY);
+      }
+
+      shell.addEventListener("click", onPhotoClick);
+      shell.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          cycleFilter();
+          bumpPhoto();
+          var cr = shell.getBoundingClientRect();
+          addRipple(cr.left + cr.width / 2, cr.top + cr.height / 2);
+        }
+      });
+
+      document.getElementById("btnPhrase").addEventListener("click", function () {
+        phraseIndex = (phraseIndex + 1) % phrases.length;
+        phraseEl.textContent = phrases[phraseIndex];
+      });
+
+      document.getElementById("btnLike").addEventListener("click", function (e) {
+        counts.like += 1;
+        nLike.textContent = String(counts.like);
+        var f = document.createElement("span");
+        f.className = "floater";
+        f.textContent = "+1";
+        var rect = e.currentTarget.getBoundingClientRect();
+        f.style.left = rect.left + rect.width / 2 + "px";
+        f.style.top = rect.top + "px";
+        document.body.appendChild(f);
+        setTimeout(function () { f.remove(); }, 1000);
+      });
+
       document.querySelectorAll("[data-set-theme]").forEach(function (btn) {
         btn.addEventListener("click", function () {
           document.body.setAttribute("data-theme", btn.getAttribute("data-set-theme") || "default");
         });
       });
+
       btnRetro.addEventListener("click", function () {
         var on = document.body.classList.toggle("retro-on");
         btnRetro.setAttribute("aria-pressed", on ? "true" : "false");
       });
+
       page.addEventListener("click", function (e) {
         if (e.target.closest(".photo-shell")) return;
         if (e.target.closest("button")) return;
@@ -33,5 +483,3 @@
   </script>
 </body>
 </html>
-
-
