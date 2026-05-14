@@ -2,483 +2,598 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>相册 · 轻互动</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>2026年黄历 · 丙午年</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+  <script src="https://cdn.jsdelivr.net/npm/lunar-javascript@1.7.7/lunar.js"></script>
   <style>
     :root {
-      --bg: #f4f2ef;
-      --surface: #ffffff;
-      --text: #1a1a1a;
-      --muted: #5c5c5c;
-      --accent: #c45c6a;
-      --accent-soft: rgba(196, 92, 106, 0.12);
-      --radius: 12px;
-      --shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+      --ink: #2a1810;
+      --paper: #f7f0e4;
+      --paper2: #efe6d8;
+      --cinnabar: #b42318;
+      --cinnabar-dim: #8a1c15;
+      --gold: #c9a227;
+      --gold-dim: #9a7b1c;
+      --green-yi: #1e6b3a;
+      --red-ji: #9b1c1c;
+      --muted: #6b5344;
+      --shadow: rgba(42, 24, 16, 0.12);
     }
-
-    [data-theme="slate"] {
-      --bg: #e8eef2;
-      --accent: #3d6b8c;
-      --accent-soft: rgba(61, 107, 140, 0.15);
-    }
-
-    [data-theme="olive"] {
-      --bg: #f0f1ea;
-      --accent: #6b7f4a;
-      --accent-soft: rgba(107, 127, 74, 0.18);
-    }
-
-    [data-theme="ink"] {
-      --bg: #12141a;
-      --surface: #1c2028;
-      --text: #ececec;
-      --muted: #a3a8b3;
-      --accent: #7eb8da;
-      --accent-soft: rgba(126, 184, 218, 0.2);
-      --shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
-    }
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
+    * { box-sizing: border-box; }
     body {
+      margin: 0;
       min-height: 100vh;
-      font-family: system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.5;
-      transition: background 0.35s ease, color 0.35s ease;
+      font-family: "Source Han Serif SC", "Noto Serif SC", "Songti SC", "SimSun", serif;
+      color: var(--ink);
+      background:
+        radial-gradient(1200px 600px at 50% -10%, rgba(201, 162, 39, 0.08), transparent 55%),
+        linear-gradient(180deg, #e8dcc8 0%, var(--paper) 35%, #f2e9da 100%);
     }
-
-    .page {
-      max-width: 960px;
+    .wrap {
+      max-width: 1100px;
       margin: 0 auto;
-      padding: clamp(1.25rem, 4vw, 2.5rem);
+      padding: 1.25rem 1rem 2.5rem;
     }
-
     header {
-      margin-bottom: 1.5rem;
+      text-align: center;
+      padding: 1.5rem 1rem 1.25rem;
+      border-bottom: 3px double var(--gold);
+      margin-bottom: 1.25rem;
+      position: relative;
     }
-
-    header h1 {
-      font-size: clamp(1.35rem, 4vw, 1.75rem);
-      font-weight: 600;
-      letter-spacing: -0.02em;
+    header::before,
+    header::after {
+      content: "◆";
+      position: absolute;
+      bottom: -0.55rem;
+      color: var(--gold);
+      font-size: 0.75rem;
     }
-
-    header p {
-      margin-top: 0.35rem;
+    header::before { left: 8%; }
+    header::after { right: 8%; }
+    h1 {
+      margin: 0;
+      font-size: clamp(1.6rem, 4vw, 2.15rem);
+      font-weight: 700;
+      letter-spacing: 0.35em;
+      color: var(--cinnabar);
+      text-indent: 0.35em;
+    }
+    .subtitle {
+      margin-top: 0.5rem;
+      font-size: 0.95rem;
       color: var(--muted);
+      letter-spacing: 0.12em;
+    }
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .month-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+    .month-nav button {
+      font-family: inherit;
+      border: 1px solid rgba(180, 35, 24, 0.35);
+      background: var(--paper2);
+      color: var(--cinnabar-dim);
+      padding: 0.35rem 0.55rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .month-nav button:hover {
+      background: #fff;
+      border-color: var(--cinnabar);
+    }
+    .month-nav button.active {
+      background: var(--cinnabar);
+      color: #fff;
+      border-color: var(--cinnabar);
+    }
+    .nav-arrows {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+    .nav-arrows button {
+      font-family: inherit;
+      padding: 0.45rem 0.85rem;
+      border-radius: 4px;
+      border: 1px solid var(--gold-dim);
+      background: linear-gradient(180deg, #fff8e7, #f0e4c8);
+      color: var(--ink);
+      cursor: pointer;
       font-size: 0.9rem;
     }
-
+    .nav-arrows button:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+    .nav-arrows .today {
+      border-color: var(--cinnabar);
+      color: var(--cinnabar);
+      font-weight: 600;
+    }
     .layout {
       display: grid;
-      gap: 1.75rem;
       grid-template-columns: 1fr;
+      gap: 1.25rem;
     }
-
-    @media (min-width: 720px) {
+    @media (min-width: 900px) {
       .layout {
-        grid-template-columns: minmax(260px, 380px) 1fr;
+        grid-template-columns: 1fr 340px;
         align-items: start;
       }
     }
-
-    .card {
-      background: var(--surface);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 1rem;
-      transition: background 0.35s ease, box-shadow 0.35s ease;
-    }
-
-    .photo-shell {
-      position: relative;
-      border-radius: calc(var(--radius) - 4px);
-      overflow: hidden;
-      cursor: pointer;
-      outline: none;
-      border: 2px solid transparent;
-      transition: border-color 0.2s ease, transform 0.15s ease;
-    }
-
-    .photo-shell:hover {
-      border-color: var(--accent-soft);
-    }
-
-    .photo-shell:focus-visible {
-      border-color: var(--accent);
-    }
-
-    .photo-shell:active {
-      transform: scale(0.985);
-    }
-
-    .photo-shell img {
-      width: 100%;
-      height: auto;
-      vertical-align: middle;
-      display: block;
-      transition: filter 0.35s ease, transform 0.35s ease;
-    }
-
-    .photo-shell[data-filter="0"] img { filter: none; }
-    .photo-shell[data-filter="1"] img { filter: grayscale(1) contrast(1.05); }
-    .photo-shell[data-filter="2"] img { filter: sepia(0.35) saturate(0.95); }
-    .photo-shell[data-filter="3"] img { filter: contrast(1.15) saturate(1.1); }
-    .photo-shell[data-filter="4"] img { filter: brightness(1.05) hue-rotate(-8deg); }
-
-    body.retro-on .photo-shell::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      background: repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 3px,
-        rgba(0, 0, 0, 0.04) 3px,
-        rgba(0, 0, 0, 0.04) 5px
-      );
-      opacity: 0.55;
-    }
-
-    .photo-hint {
-      position: absolute;
-      bottom: 0.65rem;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 0.72rem;
-      color: #fff;
-      background: rgba(0, 0, 0, 0.45);
-      padding: 0.25rem 0.55rem;
-      border-radius: 999px;
-      pointer-events: none;
-      white-space: nowrap;
-    }
-
-    .ripple {
-      position: absolute;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.45);
-      transform: translate(-50%, -50%) scale(0);
-      pointer-events: none;
-      animation: ripple 0.55s ease-out forwards;
-    }
-
-    @keyframes ripple {
-      to {
-        transform: translate(-50%, -50%) scale(3);
-        opacity: 0;
-      }
-    }
-
-    .side h2 {
-      font-size: 1rem;
-      font-weight: 600;
-      margin-bottom: 0.75rem;
-      color: var(--muted);
-    }
-
-    .phrase {
-      font-size: clamp(1.05rem, 2.8vw, 1.25rem);
-      font-weight: 500;
-      min-height: 3.2em;
-      padding: 0.75rem 0;
-      border-left: 3px solid var(--accent);
-      padding-left: 1rem;
-      margin-bottom: 1.25rem;
-      background: linear-gradient(90deg, var(--accent-soft), transparent);
-      border-radius: 0 8px 8px 0;
-    }
-
-    .btn-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      margin-bottom: 1rem;
-    }
-
-    button {
-      font: inherit;
-      cursor: pointer;
-      border: 1px solid rgba(0, 0, 0, 0.12);
-      background: var(--surface);
-      color: var(--text);
-      padding: 0.45rem 0.85rem;
+    .cal-card,
+    .detail-card {
+      background: #fffef9;
+      border: 1px solid rgba(201, 162, 39, 0.45);
       border-radius: 8px;
-      transition: background 0.2s, border-color 0.2s, transform 0.1s;
+      box-shadow: 0 8px 24px var(--shadow);
     }
-
-    [data-theme="ink"] button {
-      border-color: rgba(255, 255, 255, 0.12);
-    }
-
-    button:hover {
-      border-color: var(--accent);
-      background: var(--accent-soft);
-    }
-
-    button:active {
-      transform: scale(0.97);
-    }
-
-    button.primary {
-      background: var(--accent);
-      color: #fff;
-      border-color: transparent;
-    }
-
-    button.primary:hover {
-      filter: brightness(1.06);
-    }
-
-    button[aria-pressed="true"] {
-      border-color: var(--accent);
-      box-shadow: inset 0 0 0 1px var(--accent);
-    }
-
-    .stats {
-      font-size: 0.85rem;
-      color: var(--muted);
-      margin-top: 0.5rem;
-    }
-
-    .stats strong {
-      color: var(--accent);
-      font-weight: 600;
-    }
-
-    footer {
-      margin-top: 2.5rem;
-      padding-top: 1rem;
-      border-top: 1px solid rgba(0, 0, 0, 0.06);
+    .cal-head {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      text-align: center;
       font-size: 0.78rem;
       color: var(--muted);
+      padding: 0.5rem 0.35rem 0.35rem;
+      border-bottom: 1px solid rgba(42, 24, 16, 0.08);
+      background: linear-gradient(180deg, #faf6ee, #fffef9);
+    }
+    .cal-head span:first-child { color: var(--cinnabar); }
+    .cal-head span:last-child { color: var(--cinnabar); }
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 1px;
+      padding: 4px;
+      background: rgba(42, 24, 16, 0.06);
+    }
+    .cell {
+      min-height: 4.5rem;
+      padding: 0.25rem 0.2rem;
+      background: #fffef9;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       text-align: center;
+      transition: background 0.12s, outline 0.12s;
+      border-radius: 2px;
     }
-
-    [data-theme="ink"] footer {
-      border-top-color: rgba(255, 255, 255, 0.08);
+    .cell:hover { background: #fff7e6; }
+    .cell.other { opacity: 0.22; pointer-events: none; }
+    .cell.selected {
+      outline: 2px solid var(--cinnabar);
+      outline-offset: -2px;
+      background: #fff4e0;
     }
-
-    .floater {
-      position: fixed;
-      pointer-events: none;
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: var(--accent);
-      z-index: 50;
-      animation: floatUp 1s ease-out forwards;
-    }
-
-    @keyframes floatUp {
-      to {
-        transform: translateY(-48px);
-        opacity: 0;
-      }
-    }
-
-    .spark {
-      position: fixed;
-      width: 6px;
-      height: 6px;
+    .cell.is-today .solar {
+      background: var(--cinnabar);
+      color: #fff;
       border-radius: 50%;
-      pointer-events: none;
-      z-index: 40;
-      animation: sparkFade 0.7s ease-out forwards;
+      width: 1.65rem;
+      height: 1.65rem;
+      line-height: 1.65rem;
+      padding: 0;
     }
-
-    @keyframes sparkFade {
-      to {
-        transform: translate(var(--dx), var(--dy)) scale(0);
-        opacity: 0;
-      }
+    .cell .solar {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--ink);
+    }
+    .cell .lunar {
+      font-size: 0.68rem;
+      color: var(--muted);
+      margin-top: 0.15rem;
+      line-height: 1.2;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .cell .mark {
+      font-size: 0.62rem;
+      color: var(--cinnabar);
+      margin-top: 0.1rem;
+      line-height: 1.15;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .detail-card {
+      padding: 1rem 1.1rem 1.25rem;
+    }
+    .detail-card h2 {
+      margin: 0 0 0.75rem;
+      font-size: 1.05rem;
+      text-align: center;
+      color: var(--cinnabar);
+      letter-spacing: 0.08em;
+      border-bottom: 1px solid rgba(201, 162, 39, 0.4);
+      padding-bottom: 0.5rem;
+    }
+    .detail-grid {
+      display: grid;
+      gap: 0.55rem;
+      font-size: 0.82rem;
+      line-height: 1.55;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 4.5rem 1fr;
+      gap: 0.35rem;
+    }
+    .row .label {
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+    .row .val { word-break: break-all; }
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+    }
+    .tag {
+      display: inline-block;
+      padding: 0.12rem 0.35rem;
+      border-radius: 3px;
+      font-size: 0.72rem;
+      border: 1px solid transparent;
+    }
+    .tag.yi {
+      background: rgba(30, 107, 58, 0.1);
+      color: var(--green-yi);
+      border-color: rgba(30, 107, 58, 0.25);
+    }
+    .tag.ji {
+      background: rgba(155, 28, 28, 0.08);
+      color: var(--red-ji);
+      border-color: rgba(155, 28, 28, 0.22);
+    }
+    .block-yi,
+    .block-ji {
+      margin-top: 0.35rem;
+    }
+    .block-yi .title,
+    .block-ji .title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+    .block-yi .title { color: var(--green-yi); }
+    .block-ji .title { color: var(--red-ji); }
+    footer {
+      margin-top: 1.75rem;
+      text-align: center;
+      font-size: 0.72rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    footer a { color: var(--gold-dim); }
+    .load-hint {
+      text-align: center;
+      padding: 2rem;
+      color: var(--muted);
     }
   </style>
 </head>
-<body data-theme="default">
-  <div class="page" id="page">
+<body>
+  <div class="wrap">
     <header>
-      <h1>一张照片，几下点击</h1>
-      <p>界面偏干净，互动主要在按钮和照片上。</p>
+      <h1>二〇二六年黄历</h1>
+      <p class="subtitle" id="yearGanZhi">加载中…</p>
     </header>
 
-    <div class="layout">
-      <div class="card">
-        <div
-          class="photo-shell"
-          id="photoShell"
-          role="button"
-          tabindex="0"
-          data-filter="0"
-          aria-label="点击切换照片滤镜"
-        >
-          <img
-            id="heroImg"
-            src="ec60276c3aa7c53f3fdf124569e4b8ef.jpg"
-            alt="肖像照片"
-            width="520"
-            height="693"
-          />
-          <span class="photo-hint">点击照片 · 切换滤镜</span>
-        </div>
-      </div>
-
-      <div class="side card">
-        <h2>文案</h2>
-        <p class="phrase" id="phrase">今天在镜头前，表情自由一点也没关系。</p>
-
-        <div class="btn-row">
-          <button type="button" class="primary" id="btnPhrase">换一句</button>
-          <button type="button" id="btnLike">点个赞</button>
-        </div>
-
-        <h2>主题色</h2>
-        <div class="btn-row" role="group" aria-label="主题">
-          <button type="button" data-set-theme="default">玫瑰灰</button>
-          <button type="button" data-set-theme="slate">雾蓝</button>
-          <button type="button" data-set-theme="olive">橄榄</button>
-          <button type="button" data-set-theme="ink">深色</button>
-        </div>
-
-        <h2>小开关</h2>
-        <div class="btn-row">
-          <button type="button" id="btnRetro" aria-pressed="false">胶片划线</button>
-        </div>
-
-        <p class="stats" id="stats">
-          照片点了 <strong id="nPhoto">0</strong> 次 · 背景点了 <strong id="nBg">0</strong> 次 · 点赞 <strong id="nLike">0</strong>
-        </p>
-      </div>
+    <div id="app">
+      <p class="load-hint">正在加载历法库…</p>
     </div>
 
     <footer>
-      与 <code>ec60276c3aa7c53f3fdf124569e4b8ef.jpg</code> 放在同一目录后打开本页即可。
+      历法与宜忌数据由开源库 <a href="https://github.com/6tail/lunar-javascript" target="_blank" rel="noopener">lunar-javascript</a> 推算，仅供民俗文化与日程参考，不作任何决策依据。
     </footer>
   </div>
 
   <script>
     (function () {
-      var shell = document.getElementById("photoShell");
-      var img = document.getElementById("heroImg");
-      var phraseEl = document.getElementById("phrase");
-      var nPhoto = document.getElementById("nPhoto");
-      var nBg = document.getElementById("nBg");
-      var nLike = document.getElementById("nLike");
-      var page = document.getElementById("page");
-      var btnRetro = document.getElementById("btnRetro");
-      var FILTER_MAX = 4;
+      var YEAR = 2026;
 
-      var phrases = [
-        "今天在镜头前，表情自由一点也没关系。",
-        "不用太正经，开心会自己找到角度。",
-        "快门按下的瞬间，只剩下这一格真实。",
-        "想笑就笑，反正这是你的主场。",
-        "生活偶尔需要一点「超纲」的快乐。",
-      ];
-      var phraseIndex = 0;
-
-      var counts = { photo: 0, bg: 0, like: 0 };
-
-      function bumpPhoto() {
-        counts.photo += 1;
-        nPhoto.textContent = String(counts.photo);
+      function daysInMonth(y, m) {
+        return new Date(y, m, 0).getDate();
       }
 
-      function bumpBg() {
-        counts.bg += 1;
-        nBg.textContent = String(counts.bg);
-      }
-
-      function cycleFilter() {
-        var cur = parseInt(shell.getAttribute("data-filter"), 10) || 0;
-        var next = cur >= FILTER_MAX ? 0 : cur + 1;
-        shell.setAttribute("data-filter", String(next));
-        var labels = ["原图", "黑白", "暖复古", "更清晰", "微冷调"];
-        shell.setAttribute("aria-label", "滤镜：" + labels[next] + "，点击切换");
-      }
-
-      function addRipple(clientX, clientY) {
-        var r = shell.getBoundingClientRect();
-        var el = document.createElement("span");
-        el.className = "ripple";
-        el.style.left = clientX - r.left + "px";
-        el.style.top = clientY - r.top + "px";
-        el.style.width = el.style.height = "72px";
-        shell.appendChild(el);
-        setTimeout(function () { el.remove(); }, 600);
-      }
-
-      function onPhotoClick(e) {
-        e.stopPropagation();
-        cycleFilter();
-        bumpPhoto();
-        addRipple(e.clientX, e.clientY);
-      }
-
-      shell.addEventListener("click", onPhotoClick);
-      shell.addEventListener("keydown", function (e) {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          cycleFilter();
-          bumpPhoto();
-          var cr = shell.getBoundingClientRect();
-          addRipple(cr.left + cr.width / 2, cr.top + cr.height / 2);
+      function initialSelection() {
+        var now = new Date();
+        if (now.getFullYear() === YEAR) {
+          return { month: now.getMonth() + 1, day: now.getDate() };
         }
-      });
+        return { month: 1, day: 1 };
+      }
 
-      document.getElementById("btnPhrase").addEventListener("click", function () {
-        phraseIndex = (phraseIndex + 1) % phrases.length;
-        phraseEl.textContent = phrases[phraseIndex];
-      });
+      function joinList(arr) {
+        if (!arr || !arr.length) return "—";
+        return arr.join("　");
+      }
 
-      document.getElementById("btnLike").addEventListener("click", function (e) {
-        counts.like += 1;
-        nLike.textContent = String(counts.like);
-        var f = document.createElement("span");
-        f.className = "floater";
-        f.textContent = "+1";
-        var rect = e.currentTarget.getBoundingClientRect();
-        f.style.left = rect.left + rect.width / 2 + "px";
-        f.style.top = rect.top + "px";
-        document.body.appendChild(f);
-        setTimeout(function () { f.remove(); }, 1000);
-      });
+      function tagList(arr, cls) {
+        if (!arr || !arr.length) return '<span class="val">—</span>';
+        return (
+          '<span class="tags">' +
+          arr
+            .map(function (t) {
+              return '<span class="tag ' + cls + '">' + t + "</span>";
+            })
+            .join("") +
+          "</span>"
+        );
+      }
 
-      document.querySelectorAll("[data-set-theme]").forEach(function (btn) {
-        btn.addEventListener("click", function () {
-          document.body.setAttribute("data-theme", btn.getAttribute("data-set-theme") || "default");
-        });
-      });
-
-      btnRetro.addEventListener("click", function () {
-        var on = document.body.classList.toggle("retro-on");
-        btnRetro.setAttribute("aria-pressed", on ? "true" : "false");
-      });
-
-      page.addEventListener("click", function (e) {
-        if (e.target.closest(".photo-shell")) return;
-        if (e.target.closest("button")) return;
-        if (e.target.closest("a")) return;
-        bumpBg();
-        var n = 6;
-        for (var i = 0; i < n; i++) {
-          var sp = document.createElement("span");
-          sp.className = "spark";
-          sp.style.left = e.clientX + "px";
-          sp.style.top = e.clientY + "px";
-          sp.style.background = "var(--accent)";
-          var ang = (Math.PI * 2 * i) / n;
-          var d = 40 + Math.random() * 24;
-          sp.style.setProperty("--dx", Math.cos(ang) * d + "px");
-          sp.style.setProperty("--dy", Math.sin(ang) * d + "px");
-          document.body.appendChild(sp);
-          (function (node) {
-            setTimeout(function () { node.remove(); }, 800);
-          })(sp);
+      function renderApp() {
+        if (typeof Solar === "undefined") {
+          document.getElementById("app").innerHTML =
+            '<p class="load-hint">历法库加载失败，请检查网络后刷新页面。</p>';
+          return;
         }
-      });
+
+        var sel = initialSelection();
+        var state = { month: sel.month, day: sel.day };
+
+        var app = document.getElementById("app");
+
+        function refreshYearSubtitle() {
+          var dim0 = daysInMonth(YEAR, state.month);
+          var d0 = Math.min(state.day, dim0);
+          var lu = Solar.fromYmd(YEAR, state.month, d0).getLunar();
+          document.getElementById("yearGanZhi").textContent =
+            "当前农历年柱：" +
+            lu.getYearInGanZhi() +
+            "（" +
+            lu.getYearShengXiao() +
+            "）· 公历 " +
+            YEAR +
+            " 年";
+        }
+
+        function buildMonthButtons() {
+          var html = '<div class="month-nav">';
+          for (var m = 1; m <= 12; m++) {
+            html +=
+              '<button type="button" data-m="' +
+              m +
+              '"' +
+              (m === state.month ? ' class="active"' : "") +
+              ">" +
+              m +
+              "月</button>";
+          }
+          html += "</div>";
+          return html;
+        }
+
+        function renderToolbar() {
+          return (
+            '<div class="toolbar">' +
+            buildMonthButtons() +
+            '<div class="nav-arrows">' +
+            '<button type="button" id="prevM">上月</button>' +
+            '<button type="button" id="nextM">下月</button>' +
+            '<button type="button" class="today" id="goToday">今日</button>' +
+            "</div></div>"
+          );
+        }
+
+        function cellMarks(solar, lunar) {
+          var parts = [];
+          var jq = lunar.getJieQi();
+          if (jq) parts.push(jq);
+          var fs = solar.getFestivals().concat(solar.getOtherFestivals());
+          var lf = lunar.getFestivals().concat(lunar.getOtherFestivals());
+          fs.forEach(function (x) {
+            if (parts.indexOf(x) < 0) parts.push(x);
+          });
+          lf.forEach(function (x) {
+            if (parts.indexOf(x) < 0) parts.push(x);
+          });
+          return parts.slice(0, 2);
+        }
+
+        function lunarDayLine(lunar) {
+          var lm = lunar.getMonthInChinese() + "月";
+          if (lunar.getDay() === 1) return lm + "初一";
+          return lunar.getDayInChinese();
+        }
+
+        function renderCalendar() {
+          var dim = daysInMonth(YEAR, state.month);
+          if (state.day > dim) state.day = dim;
+
+          var first = new Date(YEAR, state.month - 1, 1);
+          var monday0 = (first.getDay() + 6) % 7;
+          var totalCells = Math.ceil((monday0 + dim) / 7) * 7;
+
+          var grid = '<div class="cal-card"><div class="cal-head">';
+          var wk = ["一", "二", "三", "四", "五", "六", "日"];
+          for (var i = 0; i < 7; i++) grid += "<span>周" + wk[i] + "</span>";
+          grid += '</div><div class="cal-grid">';
+
+          var now = new Date();
+          var isRealToday =
+            now.getFullYear() === YEAR && now.getMonth() + 1 === state.month;
+
+          for (var c = 0; c < totalCells; c++) {
+            var dayNum = c - monday0 + 1;
+            if (dayNum < 1 || dayNum > dim) {
+              grid += '<div class="cell other"></div>';
+              continue;
+            }
+            var solar = Solar.fromYmd(YEAR, state.month, dayNum);
+            var lunar = solar.getLunar();
+            var marks = cellMarks(solar, lunar);
+            var markHtml = marks.length
+              ? '<div class="mark">' + marks.join(" ") + "</div>"
+              : "";
+
+            var selected = dayNum === state.day ? " selected" : "";
+            var todayCls =
+              isRealToday && dayNum === now.getDate() ? " is-today" : "";
+
+            grid +=
+              '<div class="cell' +
+              selected +
+              todayCls +
+              '" data-day="' +
+              dayNum +
+              '">' +
+              '<span class="solar">' +
+              dayNum +
+              "</span>" +
+              '<span class="lunar">' +
+              lunarDayLine(lunar) +
+              "</span>" +
+              markHtml +
+              "</div>";
+          }
+          grid += "</div></div>";
+          return grid;
+        }
+
+        function detailHtml() {
+          var dim = daysInMonth(YEAR, state.month);
+          var d = Math.min(state.day, dim);
+          var solar = Solar.fromYmd(YEAR, state.month, d);
+          var lunar = solar.getLunar();
+
+          var yi = lunar.getDayYi();
+          var ji = lunar.getDayJi();
+
+          var title =
+            YEAR +
+            "年" +
+            state.month +
+            "月" +
+            d +
+            "日　" +
+            solar.getWeekInChinese();
+
+          var rows = [
+            ["农历", lunar.getYearInChinese() + lunar.getMonthInChinese() + "月" + lunar.getDayInChinese()],
+            ["干支", "年" + lunar.getYearInGanZhi() + "　月" + lunar.getMonthInGanZhi() + "　日" + lunar.getDayInGanZhi()],
+            ["生肖", lunar.getYearShengXiao() + "年"],
+            ["纳音", lunar.getDayNaYin()],
+            ["节气", lunar.getJieQi() || "—"],
+            ["星座", solar.getXingZuo()],
+            ["值神", lunar.getDayTianShen() + "（" + lunar.getDayTianShenLuck() + "）"],
+            ["十二神", lunar.getZhiXing()],
+            ["星宿", lunar.getXiu() + lunar.getZheng() + lunar.getAnimal() + "（" + lunar.getXiuLuck() + "）"],
+            ["彭祖百忌", lunar.getPengZuGan() + "　" + lunar.getPengZuZhi()],
+            ["冲煞", lunar.getChongDesc() + "　煞" + lunar.getDaySha()],
+            ["胎神", lunar.getDayPositionTai()],
+            ["吉神宜趋", joinList(lunar.getDayJiShen())],
+            ["凶煞宜忌", joinList(lunar.getDayXiongSha())]
+          ];
+
+          var body = rows
+            .map(function (r) {
+              return (
+                '<div class="row"><span class="label">' +
+                r[0] +
+                '</span><span class="val">' +
+                r[1] +
+                "</span></div>"
+              );
+            })
+            .join("");
+
+          return (
+            '<div class="detail-card"><h2>' +
+            title +
+            "</h2>" +
+            '<div class="detail-grid">' +
+            body +
+            '<div class="block-yi"><div class="title">宜</div>' +
+            tagList(yi, "yi") +
+            "</div>" +
+            '<div class="block-ji"><div class="title">忌</div>' +
+            tagList(ji, "ji") +
+            "</div></div></div>"
+          );
+        }
+
+        function paint() {
+          refreshYearSubtitle();
+          app.innerHTML =
+            '<div class="layout">' +
+            "<div>" +
+            renderToolbar() +
+            renderCalendar() +
+            "</div>" +
+            detailHtml() +
+            "</div>";
+
+          app.querySelectorAll(".month-nav button").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+              state.month = parseInt(btn.getAttribute("data-m"), 10);
+              paint();
+            });
+          });
+
+          app.querySelectorAll(".cal-grid .cell").forEach(function (cell) {
+            cell.addEventListener("click", function () {
+              state.day = parseInt(cell.getAttribute("data-day"), 10);
+              paint();
+            });
+          });
+
+          var prev = app.querySelector("#prevM");
+          var next = app.querySelector("#nextM");
+          var goT = app.querySelector("#goToday");
+
+          prev.addEventListener("click", function () {
+            if (state.month <= 1) return;
+            state.month--;
+            paint();
+          });
+          next.addEventListener("click", function () {
+            if (state.month >= 12) return;
+            state.month++;
+            paint();
+          });
+          prev.disabled = state.month <= 1;
+          next.disabled = state.month >= 12;
+
+          goT.addEventListener("click", function () {
+            var n = new Date();
+            if (n.getFullYear() === YEAR) {
+              state.month = n.getMonth() + 1;
+              state.day = n.getDate();
+            } else {
+              state.month = n.getMonth() + 1;
+              state.day = Math.min(n.getDate(), daysInMonth(YEAR, n.getMonth() + 1));
+            }
+            paint();
+          });
+        }
+
+        paint();
+      }
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", renderApp);
+      } else {
+        renderApp();
+      }
     })();
   </script>
 </body>
