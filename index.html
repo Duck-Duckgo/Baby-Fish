@@ -3,101 +3,134 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>坏KiKi的2026年黄历</title>
+  <meta name="theme-color" content="#e1e2eb" />
+  <title>坏KiKi日历</title>
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+  <link rel="preconnect" href="https://api.open-meteo.com" crossorigin />
   <script src="https://cdn.jsdelivr.net/npm/lunar-javascript@1.7.7/lunar.js"></script>
   <style>
     :root {
-      --ink: #2a1810;
-      --paper: #f7f0e4;
-      --paper2: #efe6d8;
-      --cinnabar: #b42318;
-      --cinnabar-dim: #8a1c15;
-      --gold: #c9a227;
-      --gold-dim: #9a7b1c;
-      --green-yi: #1e6b3a;
-      --red-ji: #9b1c1c;
-      --muted: #6b5344;
-      --shadow: rgba(42, 24, 16, 0.12);
+      --apple-bg: #e1e2eb;
+      --apple-card: rgba(214, 218, 232, 0.78);
+      --apple-card-raised: rgba(228, 231, 242, 0.94);
+      --apple-card-inner: rgba(200, 206, 224, 0.58);
+      --apple-card-border: rgba(168, 176, 200, 0.42);
+      --apple-card-border-soft: rgba(188, 195, 215, 0.38);
+      --apple-surface-header: rgba(206, 212, 228, 0.55);
+      --apple-surface-hover: rgba(222, 226, 238, 0.88);
+      --apple-surface-weather: rgba(208, 214, 230, 0.52);
+      --apple-surface-day: rgba(216, 222, 236, 0.62);
+      --apple-surface-foot: rgba(202, 208, 226, 0.48);
+      --apple-text: #1d1d1f;
+      --apple-text-secondary: #6e6e73;
+      --apple-text-tertiary: #86868b;
+      --apple-separator: rgba(95, 105, 135, 0.12);
+      --apple-blue: #0071e3;
+      --apple-blue-hover: #0077ed;
+      --apple-fill: #e8e8ed;
+      --apple-fill-hover: #dedee3;
+      --apple-shadow: 0 2px 12px rgba(0, 0, 0, 0.05), 0 12px 40px rgba(0, 0, 0, 0.06);
+      --apple-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+      --apple-radius-lg: 18px;
+      --apple-radius-md: 12px;
+      --apple-radius-pill: 980px;
+      --red-ji: #d70015;
+      --apple-rest-solar: #c95f6b;
+      color-scheme: light;
     }
     * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
     body {
       margin: 0;
       min-height: 100vh;
-      font-family: "Source Han Serif SC", "Noto Serif SC", "Songti SC", "SimSun", serif;
-      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro SC", "SF Pro Text", "PingFang SC",
+        "Hiragino Sans GB", "Microsoft YaHei UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      color: var(--apple-text);
       background:
-        radial-gradient(1200px 600px at 50% -10%, rgba(201, 162, 39, 0.08), transparent 55%),
-        linear-gradient(180deg, #e8dcc8 0%, var(--paper) 35%, #f2e9da 100%);
+        radial-gradient(100% 120% at 50% -15%, rgba(232, 234, 244, 0.88) 0%, transparent 52%),
+        radial-gradient(80% 60% at 100% 100%, rgba(198, 208, 232, 0.32) 0%, transparent 50%),
+        var(--apple-bg);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
     .wrap {
-      max-width: 1100px;
+      position: relative;
+      max-width: 980px;
       margin: 0 auto;
-      padding: 1.25rem 1rem 2.5rem;
+      padding: 1.5rem max(1.25rem, env(safe-area-inset-right)) 3rem max(1.25rem, env(safe-area-inset-left));
     }
     header {
       text-align: center;
-      padding: 1.5rem 1rem 1.25rem;
-      border-bottom: 3px double var(--gold);
-      margin-bottom: 1.25rem;
-      position: relative;
+      padding: 2.25rem 0.5rem 2rem;
+      margin-bottom: 0.5rem;
     }
-    header::before,
-    header::after {
-      content: "◆";
-      position: absolute;
-      bottom: -0.55rem;
-      color: var(--gold);
-      font-size: 0.75rem;
-    }
-    header::before { left: 8%; }
-    header::after { right: 8%; }
     h1 {
       margin: 0;
-      font-size: clamp(1.6rem, 4vw, 2.15rem);
-      font-weight: 700;
-      letter-spacing: 0.35em;
-      color: var(--cinnabar);
-      text-indent: 0.35em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 0.4rem 0.55rem;
+      font-size: clamp(2rem, 5vw, 2.75rem);
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      line-height: 1.08;
+      color: var(--apple-text);
+    }
+    .title-maruko-icon {
+      display: inline-flex;
+      width: 2.35rem;
+      height: 2.35rem;
+      flex-shrink: 0;
+      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.08));
+    }
+    .title-maruko-icon svg {
+      width: 100%;
+      height: 100%;
+      display: block;
     }
     .subtitle {
-      margin-top: 0.5rem;
-      font-size: 0.95rem;
-      color: var(--muted);
-      letter-spacing: 0.12em;
+      margin-top: 0.65rem;
+      font-size: 1.0625rem;
+      font-weight: 400;
+      color: var(--apple-text-secondary);
+      letter-spacing: 0.01em;
+      line-height: 1.4;
     }
     .toolbar {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
-      gap: 0.75rem;
-      margin-bottom: 1rem;
+      gap: 0.85rem;
+      margin-bottom: 1.25rem;
     }
     .month-nav {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.35rem;
+      gap: 0.4rem;
     }
     .month-nav button {
       font-family: inherit;
-      border: 1px solid rgba(180, 35, 24, 0.35);
-      background: var(--paper2);
-      color: var(--cinnabar-dim);
-      padding: 0.35rem 0.55rem;
-      border-radius: 4px;
+      border: none;
+      background: var(--apple-fill);
+      color: var(--apple-text);
+      padding: 0.42rem 0.72rem;
+      border-radius: var(--apple-radius-pill);
       cursor: pointer;
-      font-size: 0.82rem;
-      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      transition: background 0.2s ease, transform 0.15s ease, opacity 0.2s ease;
     }
     .month-nav button:hover {
-      background: #fff;
-      border-color: var(--cinnabar);
+      background: var(--apple-fill-hover);
+    }
+    .month-nav button:active {
+      transform: scale(0.97);
     }
     .month-nav button.active {
-      background: var(--cinnabar);
+      background: var(--apple-text);
       color: #fff;
-      border-color: var(--cinnabar);
     }
     .nav-arrows {
       display: flex;
@@ -106,96 +139,159 @@
     }
     .nav-arrows button {
       font-family: inherit;
-      padding: 0.45rem 0.85rem;
-      border-radius: 4px;
-      border: 1px solid var(--gold-dim);
-      background: linear-gradient(180deg, #fff8e7, #f0e4c8);
-      color: var(--ink);
+      padding: 0.5rem 1rem;
+      border-radius: var(--apple-radius-pill);
+      border: none;
+      background: var(--apple-card-raised);
+      color: var(--apple-text);
       cursor: pointer;
-      font-size: 0.9rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      box-shadow: var(--apple-shadow-sm);
+      transition: background 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+    }
+    .nav-arrows button:hover:not(:disabled) {
+      background: var(--apple-surface-hover);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     }
     .nav-arrows button:disabled {
       opacity: 0.35;
       cursor: not-allowed;
+      box-shadow: none;
     }
     .nav-arrows .today {
-      border-color: var(--cinnabar);
-      color: var(--cinnabar);
-      font-weight: 600;
+      background: var(--apple-blue);
+      color: #fff;
+      box-shadow: none;
+    }
+    .nav-arrows .today:hover:not(:disabled) {
+      background: var(--apple-blue-hover);
+      box-shadow: 0 4px 12px rgba(0, 113, 227, 0.28);
     }
     .layout {
       display: grid;
       grid-template-columns: 1fr;
-      gap: 1.25rem;
+      gap: 1.5rem;
+    }
+    .layout-main {
+      min-width: 0;
+    }
+    .layout-side {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      min-width: 0;
     }
     @media (min-width: 900px) {
       .layout {
-        grid-template-columns: 1fr 340px;
+        grid-template-columns: 1fr min(340px, 36%);
         align-items: start;
       }
     }
     .cal-card,
     .detail-card {
-      background: #fffef9;
-      border: 1px solid rgba(201, 162, 39, 0.45);
-      border-radius: 8px;
-      box-shadow: 0 8px 24px var(--shadow);
+      background: var(--apple-card);
+      backdrop-filter: blur(22px) saturate(1.25);
+      -webkit-backdrop-filter: blur(22px) saturate(1.25);
+      border: 1px solid var(--apple-card-border);
+      border-radius: var(--apple-radius-lg);
+      box-shadow: var(--apple-shadow);
     }
     .cal-head {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
       text-align: center;
-      font-size: 0.78rem;
-      color: var(--muted);
-      padding: 0.5rem 0.35rem 0.35rem;
-      border-bottom: 1px solid rgba(42, 24, 16, 0.08);
-      background: linear-gradient(180deg, #faf6ee, #fffef9);
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--apple-text-tertiary);
+      padding: 0.65rem 0.5rem 0.5rem;
+      border-bottom: 1px solid var(--apple-separator);
+      background: var(--apple-surface-header);
+      letter-spacing: 0.02em;
     }
-    .cal-head span:first-child { color: var(--cinnabar); }
-    .cal-head span:last-child { color: var(--cinnabar); }
     .cal-grid {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
       gap: 1px;
-      padding: 4px;
-      background: rgba(42, 24, 16, 0.06);
+      padding: 8px;
+      background: rgba(0, 0, 0, 0.04);
     }
     .cell {
-      min-height: 4.5rem;
-      padding: 0.25rem 0.2rem;
-      background: #fffef9;
+      min-height: 5.45rem;
+      padding: 0.3rem 0.2rem;
+      background: var(--apple-card-inner);
       cursor: pointer;
       display: flex;
       flex-direction: column;
       align-items: center;
       text-align: center;
-      transition: background 0.12s, outline 0.12s;
-      border-radius: 2px;
+      transition: background 0.15s ease, box-shadow 0.15s ease;
+      border-radius: 10px;
+      border: none;
     }
-    .cell:hover { background: #fff7e6; }
-    .cell.other { opacity: 0.22; pointer-events: none; }
+    .cell:hover {
+      background: var(--apple-surface-hover);
+    }
+    .cell.other {
+      opacity: 0.2;
+      pointer-events: none;
+      background: transparent;
+    }
     .cell.selected {
-      outline: 2px solid var(--cinnabar);
-      outline-offset: -2px;
-      background: #fff4e0;
+      outline: none;
+      background: rgba(0, 113, 227, 0.08);
+      box-shadow: inset 0 0 0 2px var(--apple-blue);
     }
     .cell.is-today .solar {
-      background: var(--cinnabar);
+      background: var(--apple-blue);
       color: #fff;
+      font-weight: 600;
       border-radius: 50%;
       width: 1.65rem;
       height: 1.65rem;
       line-height: 1.65rem;
       padding: 0;
+      box-shadow: 0 2px 8px rgba(0, 113, 227, 0.35);
     }
     .cell .solar {
       font-size: 1rem;
       font-weight: 600;
-      color: var(--ink);
+      color: var(--apple-text);
+      font-variant-numeric: tabular-nums;
+    }
+    .solar-row {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.1rem;
+    }
+    .solar-hatch-ico {
+      display: inline-flex;
+      width: 0.92rem;
+      height: 0.92rem;
+      flex-shrink: 0;
+      vertical-align: middle;
+    }
+    .solar-hatch-ico svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .cell.cell-kiki-hatch .lunar {
+      white-space: normal;
+      font-size: 0.65rem;
+      line-height: 1.22;
+      max-height: 2.65em;
+      overflow: visible;
+      text-overflow: clip;
+    }
+    .lunar-kiki-hatch {
+      color: #c95f6b;
+      font-weight: 500;
     }
     .cell .lunar {
-      font-size: 0.68rem;
-      color: var(--muted);
+      font-size: 0.6875rem;
+      color: var(--apple-text-secondary);
       margin-top: 0.15rem;
       line-height: 1.2;
       max-width: 100%;
@@ -204,111 +300,598 @@
       white-space: nowrap;
     }
     .cell .mark {
-      font-size: 0.62rem;
-      color: var(--cinnabar);
-      margin-top: 0.1rem;
+      font-size: 0.625rem;
+      color: var(--apple-blue);
+      margin-top: 0.12rem;
       line-height: 1.15;
       max-width: 100%;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      font-weight: 500;
+    }
+    .cell .cell-bazi-blurb {
+      font-size: 0.6rem;
+      line-height: 1.28;
+      color: var(--apple-text-secondary);
+      margin-top: 0.14rem;
+      max-width: 100%;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      word-break: break-word;
+      text-align: center;
+    }
+    .cell.cell-rest .solar {
+      color: var(--apple-rest-solar);
+      font-weight: 600;
+    }
+    .cell.cell-rest.is-today .solar {
+      background: var(--apple-blue);
+      color: #fff;
+      font-weight: 600;
+      border-radius: 50%;
+      width: 1.65rem;
+      height: 1.65rem;
+      line-height: 1.65rem;
+      padding: 0;
+      box-shadow: 0 2px 8px rgba(0, 113, 227, 0.35);
     }
     .detail-card {
-      padding: 1rem 1.1rem 1.25rem;
+      padding: 1.25rem 1.25rem 1.5rem;
     }
     .detail-card h2 {
-      margin: 0 0 0.75rem;
-      font-size: 1.05rem;
+      margin: 0 0 1rem;
+      font-size: 1.0625rem;
+      font-weight: 600;
       text-align: center;
-      color: var(--cinnabar);
-      letter-spacing: 0.08em;
-      border-bottom: 1px solid rgba(201, 162, 39, 0.4);
-      padding-bottom: 0.5rem;
+      color: var(--apple-text);
+      letter-spacing: -0.01em;
+      border-bottom: 1px solid var(--apple-separator);
+      padding-bottom: 0.75rem;
     }
-    .detail-grid {
-      display: grid;
-      gap: 0.55rem;
-      font-size: 0.82rem;
+    .detail-summary-wrap {
+      margin-top: 0.15rem;
+    }
+    .detail-summary {
+      margin: 0;
+      font-size: 0.875rem;
+      line-height: 1.72;
+      color: var(--apple-text);
+      letter-spacing: 0.01em;
+      text-align: justify;
+      text-justify: inter-ideograph;
+    }
+    .detail-summary-foot {
+      margin: 0.65rem 0 0;
+      font-size: 0.6875rem;
       line-height: 1.55;
+      color: var(--apple-text-tertiary);
+      text-align: center;
     }
-    .row {
-      display: grid;
-      grid-template-columns: 4.5rem 1fr;
+    .history-vpn-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
       gap: 0.35rem;
+      margin: -0.2rem auto 0.7rem;
+      padding: 0.4rem 0.65rem;
+      max-width: 100%;
+      box-sizing: border-box;
+      font-size: 0.6875rem;
+      font-weight: 500;
+      line-height: 1.45;
+      color: #8b4513;
+      background: rgba(255, 149, 0, 0.11);
+      border: 1px solid rgba(255, 149, 0, 0.3);
+      border-radius: 8px;
+      text-align: center;
     }
-    .row .label {
-      color: var(--muted);
+    .history-sub {
+      margin: -0.35rem 0 0.85rem;
+      font-size: 0.75rem;
+      color: var(--apple-text-tertiary);
+      text-align: center;
+      line-height: 1.45;
+    }
+    .history-timeline-root {
+      max-height: min(52vh, 28rem);
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-right: 0.2rem;
+      margin: 0 -0.15rem 0 0;
+    }
+    .history-status {
+      margin: 0.5rem 0;
+      text-align: center;
+      font-size: 0.8125rem;
+      color: var(--apple-text-secondary);
+      line-height: 1.5;
+    }
+    .history-status-err {
+      color: #c62828;
+    }
+    .history-tl {
+      list-style: none;
+      margin: 0;
+      padding: 0 0 0 0.55rem;
+      position: relative;
+    }
+    .history-tl::before {
+      content: "";
+      position: absolute;
+      left: 0.52rem;
+      top: 0.4rem;
+      bottom: 0.45rem;
+      width: 2px;
+      background: rgba(0, 0, 0, 0.07);
+      border-radius: 1px;
+    }
+    .history-tl-item {
+      position: relative;
+      padding: 0 0 0.9rem 1.2rem;
+    }
+    .history-tl-item:last-child {
+      padding-bottom: 0.1rem;
+    }
+    .history-tl-dot {
+      position: absolute;
+      left: 0.18rem;
+      top: 0.38rem;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--apple-blue);
+      box-shadow: 0 0 0 3px var(--apple-card-inner);
+    }
+    .history-tl-year {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--apple-text-secondary);
+      margin-bottom: 0.22rem;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+    .history-tl-text {
+      font-size: 0.8125rem;
+      line-height: 1.52;
+      color: var(--apple-text);
+    }
+    .history-link {
+      font-size: 0.6875rem;
+      font-weight: 500;
+      color: var(--apple-blue);
+      text-decoration: none;
       flex-shrink: 0;
     }
-    .row .val { word-break: break-all; }
-    .tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.25rem;
+    .history-link:hover {
+      text-decoration: underline;
     }
-    .tag {
-      display: inline-block;
-      padding: 0.12rem 0.35rem;
-      border-radius: 3px;
-      font-size: 0.72rem;
-      border: 1px solid transparent;
-    }
-    .tag.yi {
-      background: rgba(30, 107, 58, 0.1);
-      color: var(--green-yi);
-      border-color: rgba(30, 107, 58, 0.25);
-    }
-    .tag.ji {
-      background: rgba(155, 28, 28, 0.08);
-      color: var(--red-ji);
-      border-color: rgba(155, 28, 28, 0.22);
-    }
-    .block-yi,
-    .block-ji {
-      margin-top: 0.35rem;
-    }
-    .block-yi .title,
-    .block-ji .title {
-      font-size: 0.75rem;
-      font-weight: 700;
-      margin-bottom: 0.25rem;
-    }
-    .block-yi .title { color: var(--green-yi); }
-    .block-ji .title { color: var(--red-ji); }
-    footer {
-      margin-top: 1.75rem;
+    .history-more {
+      margin: 0.35rem 0 0;
+      font-size: 0.6875rem;
+      color: var(--apple-text-tertiary);
       text-align: center;
-      font-size: 0.72rem;
-      color: var(--muted);
-      line-height: 1.6;
     }
-    footer a { color: var(--gold-dim); }
+    .history-foot {
+      margin: 0.75rem 0 0;
+      padding-top: 0.65rem;
+      border-top: 1px solid var(--apple-separator);
+      font-size: 0.6875rem;
+      line-height: 1.55;
+      color: var(--apple-text-tertiary);
+    }
+    .history-foot a {
+      color: var(--apple-blue);
+      text-decoration: none;
+    }
+    .history-foot a:hover {
+      text-decoration: underline;
+    }
+    footer {
+      margin-top: 2.5rem;
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--apple-text-tertiary);
+      line-height: 1.6;
+      max-width: 36rem;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    footer a {
+      color: var(--apple-blue);
+      text-decoration: none;
+    }
+    footer a:hover {
+      text-decoration: underline;
+    }
     .load-hint {
       text-align: center;
       padding: 2rem;
-      color: var(--muted);
+      color: var(--apple-text-secondary);
+      font-size: 0.9375rem;
+    }
+    .weather-card {
+      background: var(--apple-card);
+      backdrop-filter: blur(22px) saturate(1.25);
+      -webkit-backdrop-filter: blur(22px) saturate(1.25);
+      border: 1px solid var(--apple-card-border);
+      border-radius: var(--apple-radius-lg);
+      box-shadow: var(--apple-shadow);
+      margin-bottom: 1.5rem;
+      overflow: hidden;
+    }
+    .weather-hd {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem 1rem;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--apple-separator);
+      background: var(--apple-surface-weather);
+    }
+    .weather-hd h3 {
+      margin: 0;
+      font-size: 1.0625rem;
+      font-weight: 600;
+      color: var(--apple-text);
+      letter-spacing: -0.01em;
+    }
+    .weather-loc {
+      margin: 0;
+      font-size: 0.75rem;
+      color: var(--apple-text-secondary);
+      flex: 1 1 100%;
+      order: 3;
+      line-height: 1.45;
+    }
+    @media (min-width: 640px) {
+      .weather-loc {
+        flex: 1 1 auto;
+        order: 0;
+        text-align: right;
+      }
+    }
+    .weather-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      align-items: center;
+    }
+    .weather-actions button {
+      font-family: inherit;
+      font-size: 0.75rem;
+      font-weight: 500;
+      padding: 0.35rem 0.65rem;
+      border-radius: var(--apple-radius-pill);
+      border: none;
+      background: var(--apple-fill);
+      color: var(--apple-text);
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    .weather-actions button:hover {
+      background: var(--apple-fill-hover);
+    }
+    .weather-actions button.active {
+      background: var(--apple-text);
+      color: #fff;
+    }
+    .weather-body {
+      padding: 1rem 1.25rem 1.25rem;
+      font-size: 0.8125rem;
+    }
+    .weather-current {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 0.85rem 1.1rem;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    .weather-current-left {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.2rem;
+      min-width: 4.75rem;
+    }
+    .weather-current-detail {
+      min-width: 0;
+    }
+    .weather-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 0;
+      flex-shrink: 0;
+    }
+    .weather-icon svg {
+      display: block;
+    }
+    .weather-icon--hero {
+      width: 52px;
+      height: 52px;
+      color: var(--apple-blue);
+      opacity: 0.92;
+    }
+    .weather-icon--sm {
+      width: 30px;
+      height: 30px;
+      margin: 0.2rem auto 0.15rem;
+      color: var(--apple-blue);
+      opacity: 0.88;
+    }
+    .weather-day-icon {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 32px;
+    }
+    .weather-temp-big {
+      font-size: 2.25rem;
+      font-weight: 600;
+      color: var(--apple-text);
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.03em;
+    }
+    .weather-temp-big small {
+      font-size: 0.45em;
+      font-weight: 600;
+      color: var(--apple-text-secondary);
+    }
+    .weather-meta {
+      color: var(--apple-text-secondary);
+      font-size: 0.8125rem;
+      line-height: 1.55;
+    }
+    .weather-meta strong {
+      color: var(--apple-text);
+      font-weight: 600;
+    }
+    .weather-daily-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--apple-text-secondary);
+      margin: 0 0 0.5rem;
+      letter-spacing: 0.01em;
+    }
+    .weather-daily-row {
+      display: flex;
+      gap: 0.5rem;
+      overflow-x: auto;
+      padding-bottom: 0.25rem;
+      -webkit-overflow-scrolling: touch;
+    }
+    .weather-day {
+      flex: 1 0 4.5rem;
+      min-width: 4.5rem;
+      text-align: center;
+      padding: 0.55rem 0.3rem;
+      border-radius: var(--apple-radius-md);
+      border: 1px solid var(--apple-card-border-soft);
+      background: var(--apple-surface-day);
+    }
+    .weather-day .d1 {
+      font-size: 0.6875rem;
+      color: var(--apple-text-tertiary);
+    }
+    .weather-day .d2 {
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin: 0.2rem 0;
+      color: var(--apple-text);
+    }
+    .weather-day .d3 {
+      font-size: 0.6875rem;
+      color: var(--apple-text-secondary);
+    }
+    .weather-day .d4 {
+      font-size: 0.625rem;
+      color: var(--apple-text-tertiary);
+      margin-top: 0.15rem;
+    }
+    .weather-err {
+      color: var(--red-ji);
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+    .weather-model-bar {
+      flex: 1 1 100%;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem 0.75rem;
+      padding-top: 0.65rem;
+      margin-top: 0.35rem;
+      border-top: 1px solid var(--apple-separator);
+    }
+    .weather-model-bar label {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--apple-text-secondary);
+      white-space: nowrap;
+    }
+    .weather-model-bar select {
+      font-family: inherit;
+      font-size: 0.8125rem;
+      font-weight: 400;
+      padding: 0.45rem 0.65rem;
+      border-radius: 10px;
+      border: 1px solid #d2d2d7;
+      background-color: var(--apple-card-raised);
+      color: var(--apple-text);
+      min-width: 12rem;
+      max-width: 100%;
+      flex: 1 1 14rem;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236e6e73' d='M2.5 4.5L6 8l3.5-3.5'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.65rem center;
+      padding-right: 2rem;
+    }
+    .weather-model-bar select:focus {
+      outline: none;
+      border-color: var(--apple-blue);
+      box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.2);
+    }
+    .weather-disclaimer {
+      margin: 0;
+      padding: 0.85rem 1.25rem 1rem;
+      font-size: 0.6875rem;
+      color: var(--apple-text-tertiary);
+      line-height: 1.55;
+      border-top: 1px solid var(--apple-separator);
+      background: var(--apple-surface-foot);
     }
   </style>
 </head>
 <body>
   <div class="wrap">
     <header>
-      <h1>二〇二六年黄历</h1>
+      <h1>
+        坏KiKi日历
+        <span class="title-maruko-icon" title="樱桃小丸子" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+            <circle cx="15" cy="9.5" r="3.6" fill="#e53935"/>
+            <circle cx="21" cy="8.8" r="3.6" fill="#e53935"/>
+            <path d="M18 5.5c-.8-1.6-2-2.8-3.5-3.2M19 5.2c.5-2 2-3.2 4-3.5" stroke="#6d9e3e" stroke-width="1.25" stroke-linecap="round"/>
+            <path d="M24 14c-8.5 0-14 5.2-14 12v2c0 3 2.5 5.5 5.5 5.5h17c3 0 5.5-2.5 5.5-5.5v-2c0-6.8-5.5-12-14-12z" fill="#2c2c2e"/>
+            <ellipse cx="24" cy="25.5" rx="11.5" ry="12" fill="#ffd8bc"/>
+            <path d="M12.5 21.5c2.5-4 6.8-6.2 11.5-6.2s9 2.2 11.5 6.2c-3.5-2.8-7.5-3.5-11.5-3.5s-8 0.7-11.5 3.5z" fill="#2c2c2e"/>
+            <ellipse cx="18.2" cy="26" rx="1.4" ry="1.9" fill="#1c1c1e"/>
+            <ellipse cx="29.8" cy="26" rx="1.4" ry="1.9" fill="#1c1c1e"/>
+            <path d="M20.5 30.5q3.5 2.5 7 0" stroke="#5c4033" stroke-width="1.35" stroke-linecap="round"/>
+            <circle cx="14" cy="28.5" r="2.4" fill="#ffb0b0" opacity=".9"/>
+            <circle cx="34" cy="28.5" r="2.4" fill="#ffb0b0" opacity=".9"/>
+            <path d="M14 36.5h20l-1.2 4.2H15.2z" fill="#fdd835"/>
+            <path d="M15.5 40.7h17l-1.5 5.8h-14z" fill="#c62828"/>
+          </svg>
+        </span>
+      </h1>
       <p class="subtitle" id="yearGanZhi">加载中…</p>
     </header>
+
+    <section id="weather-root" class="weather-card" aria-label="天气预报">
+      <div class="weather-hd">
+        <h3>近日天气</h3>
+        <div class="weather-actions">
+          <button type="button" class="weather-pick active" data-lat="39.9042" data-lon="116.4074" data-name="北京">北京</button>
+          <button type="button" class="weather-pick" data-lat="31.2304" data-lon="121.4737" data-name="上海">上海</button>
+          <button type="button" class="weather-pick" data-lat="23.1291" data-lon="113.2644" data-name="广州">广州</button>
+          <button type="button" class="weather-pick" data-lat="22.5431" data-lon="114.0579" data-name="深圳">深圳</button>
+          <button type="button" class="weather-pick" data-lat="30.5728" data-lon="104.0668" data-name="成都">成都</button>
+          <button type="button" id="weather-use-geo">当前定位</button>
+          <button type="button" id="weather-refresh">刷新</button>
+        </div>
+        <p class="weather-loc" id="weather-loc-label">气象数据加载中…</p>
+        <div class="weather-model-bar">
+          <label for="weather-model">预报模式</label>
+          <select id="weather-model" title="不同数值模式对同一地点预报会有差异，可切换对比">
+            <option value="">多模式自动（Open-Meteo 全球融合）</option>
+            <option value="cma_grapes_global" selected>CMA GRAPES（中国气象局全球模式，国内参考优先）</option>
+            <option value="ecmwf_ifs025">ECMWF IFS 0.25°（欧洲中期预报中心）</option>
+            <option value="gfs_seamless">NOAA GFS 融合（美国）</option>
+            <option value="icon_seamless">DWD ICON（德国）</option>
+          </select>
+        </div>
+      </div>
+      <div id="weather-body" class="weather-body">
+        <p class="load-hint" style="padding: 1rem">正在连接气象服务…</p>
+      </div>
+      <p class="weather-disclaimer">
+        说明：网格化数值预报与手机里的实况/短临（雷达、站点订正）不同，局地温差、降雨起止时间常有偏差。默认已选用中国气象局
+        GRAPES 模式；若仍觉不准，请在「预报模式」中切换对比。恶劣天气请以当地气象台预警为准。
+      </p>
+    </section>
 
     <div id="app">
       <p class="load-hint">正在加载历法库…</p>
     </div>
 
     <footer>
-      历法与宜忌数据由开源库 <a href="https://github.com/6tail/lunar-javascript" target="_blank" rel="noopener">lunar-javascript</a> 推算，仅供民俗文化与日程参考，不作任何决策依据。
+      历法与宜忌数据由开源库 <a href="https://github.com/6tail/lunar-javascript" target="_blank" rel="noopener">lunar-javascript</a> 推算；天气预报来自 <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a>（含 CMA GRAPES 等数值模式）。仅供日常参考，不作任何决策依据。
     </footer>
   </div>
 
   <script>
     (function () {
       var YEAR = 2026;
+
+      function pad2(n) {
+        return n < 10 ? "0" + n : String(n);
+      }
+      function ymdKey(y, m, d) {
+        return y + "-" + pad2(m) + "-" + pad2(d);
+      }
+
+      /** 2026 年调休上班日（周末仍上班，不按休息日样式）— 依据国务院办公厅节假日安排 */
+      var LEGAL_WORK_2026 = {
+        "2026-01-04": true,
+        "2026-02-14": true,
+        "2026-02-28": true,
+        "2026-05-09": true,
+        "2026-09-20": true,
+        "2026-10-10": true
+      };
+
+      /** 2026 年国家法定节假日放假公历日（与周末合并为「休息日」样式） */
+      var LEGAL_REST_2026 = {};
+      (function () {
+        var xs = [
+          "2026-01-01",
+          "2026-01-02",
+          "2026-01-03",
+          "2026-02-15",
+          "2026-02-16",
+          "2026-02-17",
+          "2026-02-18",
+          "2026-02-19",
+          "2026-02-20",
+          "2026-02-21",
+          "2026-02-22",
+          "2026-02-23",
+          "2026-04-04",
+          "2026-04-05",
+          "2026-04-06",
+          "2026-05-01",
+          "2026-05-02",
+          "2026-05-03",
+          "2026-05-04",
+          "2026-05-05",
+          "2026-06-19",
+          "2026-06-20",
+          "2026-06-21",
+          "2026-09-25",
+          "2026-09-26",
+          "2026-09-27",
+          "2026-10-01",
+          "2026-10-02",
+          "2026-10-03",
+          "2026-10-04",
+          "2026-10-05",
+          "2026-10-06",
+          "2026-10-07"
+        ];
+        for (var ri = 0; ri < xs.length; ri++) {
+          LEGAL_REST_2026[xs[ri]] = true;
+        }
+      })();
+
+      function isPublicRestDay(y, m, d) {
+        if (y !== YEAR) return false;
+        var key = ymdKey(y, m, d);
+        if (LEGAL_WORK_2026[key]) return false;
+        if (LEGAL_REST_2026[key]) return true;
+        var wd = new Date(y, m - 1, d).getDay();
+        return wd === 0 || wd === 6;
+      }
 
       function daysInMonth(y, m) {
         return new Date(y, m, 0).getDate();
@@ -322,24 +905,6 @@
         return { month: 1, day: 1 };
       }
 
-      function joinList(arr) {
-        if (!arr || !arr.length) return "—";
-        return arr.join("　");
-      }
-
-      function tagList(arr, cls) {
-        if (!arr || !arr.length) return '<span class="val">—</span>';
-        return (
-          '<span class="tags">' +
-          arr
-            .map(function (t) {
-              return '<span class="tag ' + cls + '">' + t + "</span>";
-            })
-            .join("") +
-          "</span>"
-        );
-      }
-
       function renderApp() {
         if (typeof Solar === "undefined") {
           document.getElementById("app").innerHTML =
@@ -351,6 +916,143 @@
         var state = { month: sel.month, day: sel.day };
 
         var app = document.getElementById("app");
+        var historyCache = {};
+        var historyFetchCtrl = null;
+
+        function escapeHtml(str) {
+          return String(str)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;");
+        }
+
+        function monthDayCacheKey(m, d) {
+          return pad2(m) + "-" + pad2(d);
+        }
+
+        function extractEventYear(ev) {
+          var pages = ev.pages || [];
+          for (var pi = 0; pi < pages.length; pi++) {
+            var tit = pages[pi].title || "";
+            var ym = tit.match(/^(\d{1,4})年$/);
+            if (ym) return parseInt(ym[1], 10);
+          }
+          var tx = ev.text || "";
+          var tm = tx.match(/^(\d{1,4})年/);
+          if (tm) return parseInt(tm[1], 10);
+          return null;
+        }
+
+        function eventArticleUrl(ev) {
+          var ps = ev.pages || [];
+          if (!ps.length) return null;
+          var t0 = ps[0].title || "";
+          if (/^\d{1,4}年$/.test(t0) && ps[1] && ps[1].content_urls && ps[1].content_urls.desktop) {
+            return ps[1].content_urls.desktop.page;
+          }
+          var p0 = ps[0];
+          return p0.content_urls && p0.content_urls.desktop ? p0.content_urls.desktop.page : null;
+        }
+
+        function renderHistoryItems(items) {
+          if (!items.length) {
+            return (
+              '<p class="history-status">该日暂无「事件」类条目；可稍后在可访问维基的环境下查看其它类型（出生、逝世等）。</p>'
+            );
+          }
+          var maxN = 50;
+          var slice = items.length > maxN ? items.slice(0, maxN) : items;
+          var more =
+            items.length > maxN
+              ? '<p class="history-more">共 ' + items.length + " 条，此处展示前 " + maxN + " 条（按年排序）。</p>"
+              : "";
+          var html = '<ul class="history-tl">';
+          for (var hi = 0; hi < slice.length; hi++) {
+            var it = slice[hi];
+            var ylabel = it.year != null ? it.year + "年" : "年代不详";
+            var url = it.url;
+            var lk = url
+              ? '<a class="history-link" href="' + escapeHtml(url) + '" target="_blank" rel="noopener noreferrer">条目</a>'
+              : "";
+            html +=
+              '<li class="history-tl-item">' +
+              '<span class="history-tl-dot" aria-hidden="true"></span>' +
+              '<div class="history-tl-body">' +
+              '<div class="history-tl-year">' +
+              escapeHtml(ylabel) +
+              lk +
+              "</div>" +
+              '<div class="history-tl-text">' +
+              escapeHtml(it.text) +
+              "</div>" +
+              "</div></li>";
+          }
+          return html + "</ul>" + more;
+        }
+
+        function fillHistoryTimeline(month, day) {
+          var root = app.querySelector("#history-timeline-root");
+          if (!root) return;
+          var cacheKey = monthDayCacheKey(month, day);
+          if (historyCache[cacheKey]) {
+            root.innerHTML = renderHistoryItems(historyCache[cacheKey]);
+            return;
+          }
+          if (historyFetchCtrl) historyFetchCtrl.abort();
+          historyFetchCtrl = new AbortController();
+          root.innerHTML = '<p class="history-status">正在加载维基媒体…</p>';
+          var url =
+            "https://api.wikimedia.org/feed/v1/wikipedia/zh/onthisday/all/" +
+            pad2(month) +
+            "/" +
+            pad2(day);
+          fetch(url, { signal: historyFetchCtrl.signal })
+            .then(function (res) {
+              if (!res.ok) throw new Error("HTTP " + res.status);
+              return res.json();
+            })
+            .then(function (data) {
+              var events = data.events || [];
+              var items = events.map(function (ev) {
+                return {
+                  year: extractEventYear(ev),
+                  text: ev.text || "",
+                  url: eventArticleUrl(ev)
+                };
+              });
+              items.sort(function (a, b) {
+                var ya = a.year == null ? 1e9 : a.year;
+                var yb = b.year == null ? 1e9 : b.year;
+                return ya - yb;
+              });
+              historyCache[cacheKey] = items;
+              root.innerHTML = renderHistoryItems(items);
+            })
+            .catch(function (err) {
+              if (err.name === "AbortError") return;
+              root.innerHTML =
+                '<p class="history-status history-status-err">加载失败：' +
+                escapeHtml(err.message || "未知错误") +
+                "。维基媒体域名在大陆等地常需 <strong>VPN</strong> 或代理；若用 file:// 打开，请改用本地 HTTP 服务后再试。</p>";
+            });
+        }
+
+        function historyTimelineHtml(month, day) {
+          return (
+            '<div class="detail-card history-card">' +
+            '<h2>历史上的今天</h2>' +
+            '<p class="history-vpn-badge" role="note">数据源：维基媒体（api.wikimedia.org）· 中国大陆等地访问通常需 <strong>VPN</strong> 或国际网络</p>' +
+            '<p class="history-sub">' +
+            month +
+            "月" +
+            day +
+            "日（每年同日）· 按年代由远及近</p>" +
+            '<div id="history-timeline-root" class="history-timeline-root" aria-live="polite"></div>' +
+            '<p class="history-foot">简介来自中文维基百科「历史上的今天」<a href="https://zh.wikipedia.org/wiki/Wikipedia:%E5%8E%86%E5%8F%B2%E4%B8%8A%E7%9A%84%E4%BB%8A%E5%A4%A9" target="_blank" rel="noopener noreferrer">项目说明</a>；正文为开放许可内容，排序与外链由本站整理。</p>' +
+            "</div>"
+          );
+        }
 
         function refreshYearSubtitle() {
           var dim0 = daysInMonth(YEAR, state.month);
@@ -363,7 +1065,7 @@
             lu.getYearShengXiao() +
             "）· 公历 " +
             YEAR +
-            " 年";
+            " 年 · 休息日含周末与法定节假日（调休上班除外）";
         }
 
         function buildMonthButtons() {
@@ -409,6 +1111,13 @@
           return parts.slice(0, 2);
         }
 
+        var KIKI_HATCH_ICON_SVG =
+          '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">' +
+          '<path d="M8 2.15c2.55 0 4.75 2.45 4.75 6.25 0 2.7-1.95 4.85-4.75 4.85S3.25 10.9 3.25 8.4C3.25 4.6 5.45 2.15 8 2.15z" fill="#fff4ea" stroke="#8d6e63" stroke-width="1"/>' +
+          '<ellipse cx="8" cy="8.55" rx="2.25" ry="2.55" fill="#ffa726"/>' +
+          '<path d="M8 3.4l-.5 1.9.65 1.25-.55 1.7.7 1.35-.45 1.75M8 3.4l.5 1.9-.65 1.25.55 1.7-.7 1.35.45 1.75" fill="none" stroke="#c62828" stroke-width="1.05" stroke-linecap="round" stroke-linejoin="round"/>' +
+          "</svg>";
+
         function lunarDayLine(lunar) {
           var lm = lunar.getMonthInChinese() + "月";
           if (lunar.getDay() === 1) return lm + "初一";
@@ -425,7 +1134,9 @@
 
           var grid = '<div class="cal-card"><div class="cal-head">';
           var wk = ["一", "二", "三", "四", "五", "六", "日"];
-          for (var i = 0; i < 7; i++) grid += "<span>周" + wk[i] + "</span>";
+          for (var i = 0; i < 7; i++) {
+            grid += "<span>周" + wk[i] + "</span>";
+          }
           grid += '</div><div class="cal-grid">';
 
           var now = new Date();
@@ -445,28 +1156,176 @@
               ? '<div class="mark">' + marks.join(" ") + "</div>"
               : "";
 
+            var restCls = isPublicRestDay(YEAR, state.month, dayNum) ? " cell-rest" : "";
+
             var selected = dayNum === state.day ? " selected" : "";
             var todayCls =
               isRealToday && dayNum === now.getDate() ? " is-today" : "";
 
+            var kikiHatch = state.month === 4 && dayNum === 24;
+            var hatchCls = kikiHatch ? " cell-kiki-hatch" : "";
+            var solarBlock = kikiHatch
+              ? '<span class="solar-row"><span class="solar">' +
+                dayNum +
+                '</span><span class="solar-hatch-ico" title="坏KiKi破壳日" aria-hidden="true">' +
+                KIKI_HATCH_ICON_SVG +
+                "</span></span>"
+              : '<span class="solar">' + dayNum + "</span>";
+            var lunarBlock =
+              '<span class="lunar">' +
+              lunarDayLine(lunar) +
+              (kikiHatch
+                ? '<span class="lunar-kiki-hatch"> 坏KiKi破壳日</span>'
+                : "") +
+              "</span>";
+
+            var yiCell = lunar.getDayYi();
+            var jiCell = lunar.getDayJi();
+            var cellBlurb = compileDailyCellBlurb(lunar);
+            var cellBlurbTitle = escapeHtml(compileDailyFullSummary(lunar, solar, yiCell, jiCell));
+            var blurbHtml = cellBlurb
+              ? '<div class="cell-bazi-blurb" title="' + cellBlurbTitle + '">' + escapeHtml(cellBlurb) + "</div>"
+              : "";
+
             grid +=
               '<div class="cell' +
+              restCls +
               selected +
               todayCls +
+              hatchCls +
               '" data-day="' +
               dayNum +
               '">' +
-              '<span class="solar">' +
-              dayNum +
-              "</span>" +
-              '<span class="lunar">' +
-              lunarDayLine(lunar) +
-              "</span>" +
+              solarBlock +
+              lunarBlock +
+              blurbHtml +
               markHtml +
               "</div>";
           }
           grid += "</div></div>";
           return grid;
+        }
+
+        function sliceHuangliItems(arr, max) {
+          if (!arr || !arr.length) return "（历书里这一项为空）";
+          var cap = Math.min(arr.length, max);
+          var s = arr.slice(0, cap).join("、");
+          if (arr.length > max) s += "等（共" + arr.length + "条）";
+          return s;
+        }
+
+        function xunKongForGz(gz) {
+          try {
+            if (typeof LunarUtil !== "undefined" && LunarUtil.getXunKong && gz) {
+              return LunarUtil.getXunKong(gz);
+            }
+          } catch (eXk) {}
+          return "—";
+        }
+
+        var DAY_GAN_CELL = {
+          甲: "木气上扬，宜开场",
+          乙: "柔木当班，宜细修",
+          丙: "阳光外放，宜亮相",
+          丁: "灯烛内敛，宜打磨",
+          戊: "厚土承重，宜稳住",
+          己: "湿土包容，宜整理",
+          庚: "金气锐利，宜厘清",
+          辛: "珠玉内秀，宜精雕",
+          壬: "大水奔流，宜顺势",
+          癸: "雨露润泽，宜静观"
+        };
+
+        var DAY_GAN_LONG = {
+          甲: "日干甲木，像新枝破土，适合把「开头、亮相」做亮一点。",
+          乙: "日干乙木，像藤蔓顺势，适合「慢慢铺、细打理」。",
+          丙: "日干丙火，像太阳照场，适合「摊开来、让人看见」。",
+          丁: "日干丁火，像烛火专注，适合「小步快跑、抠细节」。",
+          戊: "日干戊土，像台地基座，适合「守底盘、别乱晃」。",
+          己: "日干己土，像田垄收纳，适合「归位、收拾、收尾」。",
+          庚: "日干庚金，像刀剪利落，适合「断舍离、划边界」。",
+          辛: "日干辛金，像琢磨珠宝，适合「精修、校对、提质」。",
+          壬: "日干壬水，像江河奔流，适合「顺势、别硬堵」。",
+          癸: "日干癸水，像细雨渗透，适合「观察、酝酿、少折腾」。"
+        };
+
+        function compileDailyFullSummary(lunar, solar, yi, ji) {
+          var ec = lunar.getEightChar();
+          var gzY = ec.getYear();
+          var gzM = ec.getMonth();
+          var gzD = ec.getDay();
+          var nY = ec.getYearNaYin();
+          var nM = ec.getMonthNaYin();
+          var nD = ec.getDayNaYin();
+          var yxk = ec.getYearXunKong();
+          var mxk = xunKongForGz(lunar.getMonthInGanZhiExact());
+          var dxk = xunKongForGz(lunar.getDayInGanZhiExact());
+          var nl = lunar.getYearInChinese() + lunar.getMonthInChinese() + "月" + lunar.getDayInChinese();
+          var jq = lunar.getJieQi();
+          var xing = solar.getXingZuo();
+          var chong = lunar.getChongDesc();
+          var sha = lunar.getDaySha();
+          var gan = gzD.length ? gzD.charAt(0) : "";
+          var dayLong = DAY_GAN_LONG[gan] || "日干当值，平常心过日子就很好。";
+
+          return (
+            "【干支·纳音·白话小抄】这段是「固定句式 + 当日历法」拼成的通俗版，不是在线大模型现写。" +
+            "农历「" +
+            nl +
+            "」，生肖属" +
+            lunar.getYearShengXiao() +
+            "年。" +
+            "八字里常看的前三柱：年柱「" +
+            gzY +
+            "」纳音「" +
+            nY +
+            "」，月柱「" +
+            gzM +
+            "」纳音「" +
+            nM +
+            "」，日柱「" +
+            gzD +
+            "」纳音「" +
+            nD +
+            "」。" +
+            "旬空（老黄历里「这一旬哪两支轮空」）在年柱记「" +
+            yxk +
+            "」，月柱「" +
+            mxk +
+            "」，日柱「" +
+            dxk +
+            "」——当成文化梗即可。" +
+            dayLong +
+            (jq ? "节气贴纸：「" + jq + "」。" : "节气上夹在交节之间，没有名称贴在当日。") +
+            "公历星座常被归在「" +
+            xing +
+            "」，跟干支是两套玩法，各玩各的。" +
+            "冲煞句：" +
+            chong +
+            "；煞在「" +
+            sha +
+            "」。" +
+            "宜摘几条：" +
+            sliceHuangliItems(yi, 4) +
+            "；忌摘几条：" +
+            sliceHuangliItems(ji, 4) +
+            "。以上内容仅供了解民俗与历法趣味，不作任何现实决策依据。"
+          );
+        }
+
+        function compileDailyCellBlurb(lunar) {
+          try {
+            var ec = lunar.getEightChar();
+            var gzD = ec.getDay();
+            var nD = ec.getDayNaYin();
+            var gan = gzD.length ? gzD.charAt(0) : "";
+            var tail = DAY_GAN_CELL[gan] || "日干当值";
+            var s = "「" + gzD + "·" + nD + "」" + tail;
+            if (s.length > 46) s = s.slice(0, 45) + "…";
+            return s;
+          } catch (eBl) {
+            return "";
+          }
         }
 
         function detailHtml() {
@@ -487,47 +1346,15 @@
             "日　" +
             solar.getWeekInChinese();
 
-          var rows = [
-            ["农历", lunar.getYearInChinese() + lunar.getMonthInChinese() + "月" + lunar.getDayInChinese()],
-            ["干支", "年" + lunar.getYearInGanZhi() + "　月" + lunar.getMonthInGanZhi() + "　日" + lunar.getDayInGanZhi()],
-            ["生肖", lunar.getYearShengXiao() + "年"],
-            ["纳音", lunar.getDayNaYin()],
-            ["节气", lunar.getJieQi() || "—"],
-            ["星座", solar.getXingZuo()],
-            ["值神", lunar.getDayTianShen() + "（" + lunar.getDayTianShenLuck() + "）"],
-            ["十二神", lunar.getZhiXing()],
-            ["星宿", lunar.getXiu() + lunar.getZheng() + lunar.getAnimal() + "（" + lunar.getXiuLuck() + "）"],
-            ["彭祖百忌", lunar.getPengZuGan() + "　" + lunar.getPengZuZhi()],
-            ["冲煞", lunar.getChongDesc() + "　煞" + lunar.getDaySha()],
-            ["胎神", lunar.getDayPositionTai()],
-            ["吉神宜趋", joinList(lunar.getDayJiShen())],
-            ["凶煞宜忌", joinList(lunar.getDayXiongSha())]
-          ];
-
-          var body = rows
-            .map(function (r) {
-              return (
-                '<div class="row"><span class="label">' +
-                r[0] +
-                '</span><span class="val">' +
-                r[1] +
-                "</span></div>"
-              );
-            })
-            .join("");
+          var summary = compileDailyFullSummary(lunar, solar, yi, ji);
 
           return (
             '<div class="detail-card"><h2>' +
             title +
             "</h2>" +
-            '<div class="detail-grid">' +
-            body +
-            '<div class="block-yi"><div class="title">宜</div>' +
-            tagList(yi, "yi") +
-            "</div>" +
-            '<div class="block-ji"><div class="title">忌</div>' +
-            tagList(ji, "ji") +
-            "</div></div></div>"
+            '<div class="detail-summary-wrap"><p class="detail-summary">' +
+            escapeHtml(summary) +
+            '</p><p class="detail-summary-foot">说明：摘要由固定话术模板结合 lunar-javascript 推算结果拼接，模仿口语化命理解说，并非云端 AI 实时生成。</p></div></div>'
           );
         }
 
@@ -535,12 +1362,14 @@
           refreshYearSubtitle();
           app.innerHTML =
             '<div class="layout">' +
-            "<div>" +
+            '<div class="layout-main">' +
             renderToolbar() +
             renderCalendar() +
             "</div>" +
+            '<div class="layout-side">' +
             detailHtml() +
-            "</div>";
+            historyTimelineHtml(state.month, state.day) +
+            "</div></div>";
 
           app.querySelectorAll(".month-nav button").forEach(function (btn) {
             btn.addEventListener("click", function () {
@@ -584,6 +1413,8 @@
             }
             paint();
           });
+
+          fillHistoryTimeline(state.month, state.day);
         }
 
         paint();
@@ -594,6 +1425,338 @@
       } else {
         renderApp();
       }
+    })();
+
+    (function () {
+      var bodyEl = document.getElementById("weather-body");
+      var locLabel = document.getElementById("weather-loc-label");
+      var root = document.getElementById("weather-root");
+      if (!bodyEl || !locLabel || !root) return;
+
+      var loc = { lat: 39.9042, lon: 116.4074, name: "北京" };
+      var modelSel = document.getElementById("weather-model");
+      var WX_MODEL_KEY = "huangli2026_weather_model";
+
+      try {
+        if (modelSel && sessionStorage.getItem(WX_MODEL_KEY) !== null) {
+          modelSel.value = sessionStorage.getItem(WX_MODEL_KEY);
+        }
+      } catch (e0) {}
+
+      function getWeatherModel() {
+        return modelSel && modelSel.value ? modelSel.value : "";
+      }
+
+      function weatherModelLabel() {
+        if (!modelSel) return "";
+        var opt = modelSel.options[modelSel.selectedIndex];
+        return opt ? opt.text.split("（")[0].trim() : "";
+      }
+
+      function esc(s) {
+        return String(s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      function wmoZh(code) {
+        var c = code | 0;
+        if (c === 0) return "晴";
+        if (c === 1) return "大部晴朗";
+        if (c === 2) return "多云";
+        if (c === 3) return "阴";
+        if (c === 45 || c === 48) return "雾";
+        if (c === 51 || c === 53 || c === 55) return "毛毛雨";
+        if (c === 56 || c === 57) return "冻毛毛雨";
+        if (c === 61 || c === 63 || c === 65) return "雨";
+        if (c === 66 || c === 67) return "冻雨";
+        if (c === 71 || c === 73 || c === 75) return "雪";
+        if (c === 77) return "雪粒";
+        if (c === 80 || c === 81 || c === 82) return "阵雨";
+        if (c === 85 || c === 86) return "阵雪";
+        if (c === 95) return "雷雨";
+        if (c >= 96 && c <= 99) return "雷暴伴冰雹";
+        return "云系变化";
+      }
+
+      function wmoIconHtml(code, size) {
+        var c = code == null || isNaN(code) ? -1 : code | 0;
+        var cls = size === "hero" ? "weather-icon weather-icon--hero" : "weather-icon weather-icon--sm";
+        var label = esc(wmoZh(c));
+        var xmlns = ' xmlns="http://www.w3.org/2000/svg"';
+        var svg = "";
+        if (c === 0) {
+          svg =
+            "<svg" +
+            xmlns +
+            ' viewBox="0 0 24 24" width="100%" height="100%"><circle cx="12" cy="12" r="4" fill="currentColor"/><path d="M12 2v2.2M12 19.8V22M2 12h2.2M19.8 12H22M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M19.4 4.6l-1.6 1.6M6.2 17.8l-1.6 1.6" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linecap="round"/></svg>';
+        } else if (c === 1) {
+          svg =
+            "<svg" +
+            xmlns +
+            ' viewBox="0 0 24 24" width="100%" height="100%"><circle cx="8" cy="9" r="3.2" fill="currentColor" opacity=".95"/><path d="M17 16a4 4 0 10-7-6.5A4.5 4.5 0 1017 16z" fill="currentColor" opacity=".35"/></svg>';
+        } else if (c === 2) {
+          svg =
+            "<svg" +
+            xmlns +
+            ' viewBox="0 0 24 24" width="100%" height="100%"><circle cx="9" cy="10" r="2.8" fill="currentColor" opacity=".9"/><path d="M18.5 16.5a3.8 3.8 0 10-6.8-3.2 5 5 0 10-4.2 8.2h11a4 4 0 000-8z" fill="currentColor" opacity=".4"/></svg>';
+        } else if (c === 3) {
+          svg =
+            "<svg" +
+            xmlns +
+            ' viewBox="0 0 24 24" width="100%" height="100%"><path d="M17 17a5 5 0 10-9.7-2.1A5.5 5.5 0 106 17h11z" fill="currentColor" opacity=".55"/></svg>';
+        } else if (c === 45 || c === 48) {
+          svg =
+            "<svg" +
+            xmlns +
+            ' viewBox="0 0 24 24" width="100%" height="100%"><path d="M6 18h12M7 15h10M8 12h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity=".45"/><path d="M17 10a5 5 0 10-9.7-2.1A5.5 5.5 0 106 17h8a3 3 0 000-6z" fill="currentColor" opacity=".35"/></svg>';
+        } else if (c >= 51 && c <= 57) {
+          svg =
+            "<svg" +
+            xmlns +
+            ' viewBox="0 0 24 24" width="100%" height="100%"><path d="M16 16a4 4 0 10-7.5-2 5 5 0 10-4.3 8H16a3 3 0 000-6z" fill="currentColor" opacity=".38"/><path d="M8 19v2M11 18v2M14 19v2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
+        } else if (c >= 61 && c <= 67) {
+          svg =
+            "<svg" +
+            xmlns +
+            ' viewBox="0 0 24 24" width="100%" height="100%"><path d="M17 17a5 5 0 10-9.7-2.1A5.5 5.5 0 106 17h11z" fill="currentColor" opacity=".42"/><path d="M8 19l-1 2.5M12 18.5l-1 2.8M16 19l-1 2.5M10 21l-0.5 2M14 21.2l-0.6 2.3" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/></svg>';
+        } else if (c >= 71 && c <= 77) {
+          svg =
+            "<svg" +
+            xmlns +
+            ' viewBox="0 0 24 24" width="100%" height="100%"><path d="M17 15a5 5 0 10-9.7-2.1A5.5 5.5 0 106 15h11z" fill="currentColor" opacity=".4"/><path d="M8 20l1-1.2-1-1.2M12 21l1.2-1-1.2-1M16 20l-1-1.2 1-1.2M10 18.5l-1.3-1 1.3-1M14.5 18.5l1.2-1-1.2-1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>';
+        } else if (c >= 80 && c <= 82) {
+          svg =
+            "<svg" +
+            xmlns +
+            ' viewBox="0 0 24 24" width="100%" height="100%"><path d="M17 16a5 5 0 10-9.7-2.1A5.5 5.5 0 106 16h11z" fill="currentColor" opacity=".38"/><path d="M9 19l-1.5 3M13 18.5l-1.2 3.2M16.5 19.5L15 22.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
+        } else if (c >= 85 && c <= 86) {
+          svg =
+            "<svg" +
+            xmlns +
+            ' viewBox="0 0 24 24" width="100%" height="100%"><path d="M17 15a5 5 0 10-9.7-2.1A5.5 5.5 0 106 15h11z" fill="currentColor" opacity=".38"/><path d="M9 19l1-1.3-1-1.1M13 20l1.1-1.2-1.1-1M16 19l-1-1.2 1-1.1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>';
+        } else if (c >= 95 && c <= 99) {
+          svg =
+            "<svg" +
+            xmlns +
+            ' viewBox="0 0 24 24" width="100%" height="100%"><path d="M17 15a5 5 0 10-9.7-2.1A5.5 5.5 0 106 15h11z" fill="currentColor" opacity=".42"/><path d="M12 17l-2 6M11 20h2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+        } else {
+          svg =
+            "<svg" +
+            xmlns +
+            ' viewBox="0 0 24 24" width="100%" height="100%"><path d="M17 16a5 5 0 10-9.7-2.1A5.5 5.5 0 106 16h11z" fill="currentColor" opacity=".35"/></svg>';
+        }
+        return (
+          '<span class="' +
+          cls +
+          '" role="img" aria-label="' +
+          label +
+          '">' +
+          svg +
+          "</span>"
+        );
+      }
+
+      function windDir8(deg) {
+        var d = ((deg % 360) + 360) % 360;
+        var names = ["北", "东北", "东", "东南", "南", "西南", "西", "西北"];
+        return names[Math.round(d / 45) % 8] + "风";
+      }
+
+      function weekdayShort(iso) {
+        var parts = iso.split("-");
+        var dt = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+        var w = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+        return w[dt.getDay()];
+      }
+
+      function setActiveCityButton() {
+        root.querySelectorAll(".weather-pick").forEach(function (btn) {
+          var same =
+            Math.abs(parseFloat(btn.getAttribute("data-lat")) - loc.lat) < 0.02 &&
+            Math.abs(parseFloat(btn.getAttribute("data-lon")) - loc.lon) < 0.02;
+          btn.classList.toggle("active", same);
+        });
+      }
+
+      function renderWeather(data) {
+        var cur = data.current || {};
+        var daily = data.daily || {};
+        var lines = [];
+        var temp = cur.temperature_2m;
+        var appT = cur.apparent_temperature;
+        var rh = cur.relative_humidity_2m;
+        var wdir = cur.wind_direction_10m;
+        var wspd = cur.wind_speed_10m;
+        var wc = cur.weather_code;
+
+        lines.push(
+          '<div class="weather-current">' +
+            '<div class="weather-current-left">' +
+            wmoIconHtml(wc, "hero") +
+            '<div class="weather-temp-big">' +
+            (temp != null && !isNaN(temp) ? Math.round(temp) : "—") +
+            "<small>℃</small></div></div>" +
+            '<div class="weather-current-detail">' +
+            "<div><strong>" +
+            (wc != null && !isNaN(wc) ? esc(wmoZh(wc)) : "—") +
+            "</strong> · 体感 <strong>" +
+            (appT != null && !isNaN(appT) ? Math.round(appT) + "℃" : "—") +
+            "</strong></div>" +
+            '<div class="weather-meta">相对湿度 ' +
+            (rh != null && !isNaN(rh) ? Math.round(rh) + "%" : "—") +
+            " · " +
+            (wdir != null && !isNaN(wdir) ? esc(windDir8(wdir)) : "—") +
+            " " +
+            (wspd != null && !isNaN(wspd) ? Math.round(wspd) + " km/h" : "") +
+            "</div></div></div>"
+        );
+
+        lines.push('<p class="weather-daily-title">未来数日（逐日预报）</p>');
+        lines.push('<div class="weather-daily-row">');
+
+        var times = daily.time || [];
+        var codes = daily.weather_code || [];
+        var tmax = daily.temperature_2m_max || [];
+        var tmin = daily.temperature_2m_min || [];
+        var pop = daily.precipitation_probability_max || [];
+
+        var anyDay = false;
+        for (var i = 0; i < times.length; i++) {
+          var iso = times[i];
+          if (!iso) continue;
+          var hi = tmax[i];
+          var lo = tmin[i];
+          if (hi == null || lo == null || isNaN(hi) || isNaN(lo)) continue;
+          anyDay = true;
+          var md = iso.slice(5).replace("-", "/");
+          var code = codes[i];
+          lines.push(
+            '<div class="weather-day"><div class="d1">' +
+              esc(md) +
+              "</div><div class='d2'>" +
+              esc(weekdayShort(iso)) +
+              "</div><div class='weather-day-icon'>" +
+              wmoIconHtml(code != null && !isNaN(code) ? code : -1, "sm") +
+              "</div><div class='d3'>" +
+              (code != null && !isNaN(code) ? esc(wmoZh(code)) : "—") +
+              "</div><div class='d4'>" +
+              Math.round(hi) +
+              "° / " +
+              Math.round(lo) +
+              "°</div>"
+          );
+          var p = pop[i];
+          if (p != null && p !== "" && !isNaN(p)) {
+            lines.push("<div class='d4'>降水概率 " + Math.round(p) + "%</div>");
+          }
+          lines.push("</div>");
+        }
+        lines.push("</div>");
+        if (!anyDay) {
+          lines.push(
+            '<p class="weather-meta" style="margin-top:0.6rem">该模式未返回完整逐日数据，请尝试切换「预报模式」或选「多模式自动」。</p>'
+          );
+        }
+        bodyEl.innerHTML = lines.join("");
+      }
+
+      function showErr(msg) {
+        bodyEl.innerHTML =
+          '<p class="weather-err">' + esc(msg) + "</p>" +
+          '<p class="weather-meta" style="margin-top:0.5rem">请检查网络，或稍后点击「刷新」重试。</p>';
+      }
+
+      function fetchForecast() {
+        var modeLabel = weatherModelLabel();
+        locLabel.textContent =
+          "地点：" +
+          loc.name +
+          "（" +
+          loc.lat.toFixed(2) +
+          "°N, " +
+          loc.lon.toFixed(2) +
+          "°E） · 模式：" +
+          modeLabel +
+          " · 数据 Open-Meteo";
+        setActiveCityButton();
+
+        var url =
+          "https://api.open-meteo.com/v1/forecast?latitude=" +
+          loc.lat +
+          "&longitude=" +
+          loc.lon +
+          "&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m" +
+          "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max" +
+          "&timezone=Asia%2FShanghai&forecast_days=6";
+        var m = getWeatherModel();
+        if (m) {
+          url += "&models=" + encodeURIComponent(m);
+        }
+
+        bodyEl.innerHTML = '<p class="load-hint" style="padding:1rem">正在获取预报…</p>';
+
+        fetch(url)
+          .then(function (r) {
+            if (!r.ok) throw new Error("气象接口返回 " + r.status);
+            return r.json();
+          })
+          .then(renderWeather)
+          .catch(function (e) {
+            showErr(e.message || "无法获取天气数据");
+          });
+      }
+
+      if (modelSel) {
+        modelSel.addEventListener("change", function () {
+          try {
+            sessionStorage.setItem(WX_MODEL_KEY, modelSel.value);
+          } catch (e1) {}
+          fetchForecast();
+        });
+      }
+
+      root.addEventListener("click", function (e) {
+        var pick = e.target.closest(".weather-pick");
+        if (pick) {
+          loc.lat = parseFloat(pick.getAttribute("data-lat"));
+          loc.lon = parseFloat(pick.getAttribute("data-lon"));
+          loc.name = pick.getAttribute("data-name") || "所选城市";
+          fetchForecast();
+          return;
+        }
+        if (e.target.id === "weather-refresh") {
+          fetchForecast();
+          return;
+        }
+        if (e.target.id === "weather-use-geo") {
+          if (!navigator.geolocation) {
+            locLabel.textContent = "您的浏览器不支持定位，已保留上一地点。";
+            return;
+          }
+          locLabel.textContent = "正在请求定位权限…";
+          navigator.geolocation.getCurrentPosition(
+            function (pos) {
+              loc.lat = pos.coords.latitude;
+              loc.lon = pos.coords.longitude;
+              loc.name = "当前位置";
+              root.querySelectorAll(".weather-pick").forEach(function (btn) {
+                btn.classList.remove("active");
+              });
+              fetchForecast();
+            },
+            function () {
+              locLabel.textContent =
+                "定位失败或未授权，仍显示上一地点预报。可点选城市或稍后重试「当前定位」。";
+            },
+            { enableHighAccuracy: false, timeout: 12000, maximumAge: 600000 }
+          );
+        }
+      });
+
+      fetchForecast();
     })();
   </script>
 </body>
