@@ -65,6 +65,27 @@
       max-width: 100%;
       min-width: 0;
     }
+    .page-sub-link {
+      position: absolute;
+      top: 1.25rem;
+      right: max(1.25rem, env(safe-area-inset-right));
+      z-index: 2;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--apple-blue);
+      text-decoration: none;
+      padding: 0.42rem 0.85rem;
+      border-radius: var(--apple-radius-pill);
+      background: var(--apple-card-raised);
+      border: 1px solid var(--apple-card-border);
+      box-shadow: var(--apple-shadow-sm);
+      transition: background 0.2s ease, box-shadow 0.2s ease;
+    }
+    .page-sub-link:hover {
+      background: var(--apple-surface-hover);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      text-decoration: none;
+    }
     header {
       text-align: center;
       padding: 2.25rem 0.5rem 2rem;
@@ -775,6 +796,7 @@
 </head>
 <body>
   <div class="wrap">
+    <a class="page-sub-link" href="index2.html">国际新闻</a>
     <header>
       <h1>
         坏KiKi日历
