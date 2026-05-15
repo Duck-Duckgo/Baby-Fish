@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#e1e2eb" />
+  <title>国际新闻 · 坏KiKi日历</title>
+  <style>
+    :root {
+      --apple-bg: #e1e2eb;
+      --apple-card: rgba(214, 218, 232, 0.78);
+      --apple-card-raised: rgba(228, 231, 242, 0.94);
+      --apple-card-border: rgba(168, 176, 200, 0.42);
+      --apple-text: #1d1d1f;
+      --apple-text-secondary: #6e6e73;
+      --apple-text-tertiary: #86868b;
+      --apple-separator: rgba(0, 0, 0, 0.08);
+      --apple-blue: #0071e3;
+      --apple-blue-hover: #0077ed;
+      --apple-shadow: 0 2px 12px rgba(0, 0, 0, 0.05), 0 12px 40px rgba(0, 0, 0, 0.06);
+      --apple-radius-lg: 18px;
+      --apple-radius-pill: 980px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro SC", "PingFang SC",
+        "Microsoft YaHei UI", sans-serif;
+      color: var(--apple-text);
+      background: var(--apple-bg);
+      -webkit-font-smoothing: antialiased;
+    }
+    .wrap {
+      position: relative;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 1.5rem max(1.25rem, env(safe-area-inset-right)) 3rem max(1.25rem, env(safe-area-inset-left));
+    }
+    .top-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+      padding-top: 0.25rem;
+    }
+    .top-bar h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+    .top-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+    }
+    .btn-link,
+    .btn-refresh {
+      font-family: inherit;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      text-decoration: none;
+      padding: 0.42rem 0.85rem;
+      border-radius: var(--apple-radius-pill);
+      border: 1px solid var(--apple-card-border);
+      background: var(--apple-card-raised);
+      color: var(--apple-text);
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+      transition: background 0.2s ease, box-shadow 0.2s ease;
+    }
+    .btn-link {
+      color: var(--apple-blue);
+    }
+    .btn-link:hover,
+    .btn-refresh:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.65);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+    .btn-refresh:disabled {
+      opacity: 0.5;
+      cursor: wait;
+    }
+    .news-meta {
+      margin: 0 0 1rem;
+      font-size: 0.75rem;
+      color: var(--apple-text-secondary);
+      line-height: 1.5;
+    }
+    .news-card {
+      background: var(--apple-card);
+      backdrop-filter: blur(22px) saturate(1.25);
+      -webkit-backdrop-filter: blur(22px) saturate(1.25);
+      border: 1px solid var(--apple-card-border);
+      border-radius: var(--apple-radius-lg);
+      box-shadow: var(--apple-shadow);
+      overflow: hidden;
+    }
+    .news-status {
+      margin: 0;
+      padding: 2rem 1.25rem;
+      text-align: center;
+      font-size: 0.875rem;
+      color: var(--apple-text-secondary);
+      line-height: 1.55;
+    }
+    .news-status.err {
+      color: #c62828;
+    }
+    .news-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .news-item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.75rem 1rem;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--apple-separator);
+      align-items: start;
+    }
+    .news-item:last-child {
+      border-bottom: none;
+    }
+    .news-item-body {
+      min-width: 0;
+    }
+    .news-item h2 {
+      margin: 0 0 0.35rem;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      line-height: 1.4;
+      letter-spacing: -0.01em;
+    }
+    .news-item h2 a {
+      color: var(--apple-text);
+      text-decoration: none;
+    }
+    .news-item h2 a:hover {
+      color: var(--apple-blue);
+    }
+    .news-item p {
+      margin: 0;
+      font-size: 0.8125rem;
+      line-height: 1.5;
+      color: var(--apple-text-secondary);
+    }
+    .news-item time {
+      display: block;
+      margin-top: 0.4rem;
+      font-size: 0.6875rem;
+      color: var(--apple-text-tertiary);
+    }
+    .news-thumb {
+      width: 4.5rem;
+      height: 4.5rem;
+      border-radius: 10px;
+      object-fit: cover;
+      flex-shrink: 0;
+      background: rgba(0, 0, 0, 0.06);
+    }
+    .news-foot {
+      margin: 1rem 0 0;
+      padding: 0.85rem 1.25rem;
+      font-size: 0.6875rem;
+      line-height: 1.55;
+      color: var(--apple-text-tertiary);
+      border-top: 1px solid var(--apple-separator);
+      background: rgba(202, 208, 226, 0.35);
+    }
+    .news-foot a {
+      color: var(--apple-blue);
+      text-decoration: none;
+    }
+    .news-foot a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top-bar">
+      <h1>国际新闻</h1>
+      <div class="top-actions">
+        <button type="button" class="btn-refresh" id="news-refresh">刷新</button>
+        <a class="btn-link" href="index.html">返回日历</a>
+      </div>
+    </div>
+    <p class="news-meta" id="news-meta">正在加载最新国际要闻…</p>
+    <section class="news-card" aria-label="国际新闻列表">
+      <p class="news-status" id="news-status">正在连接新闻源…</p>
+      <ul class="news-list" id="news-list" hidden></ul>
+      <p class="news-foot">
+        数据来自 <a href="https://www.bbc.com/news/world" target="_blank" rel="noopener noreferrer">BBC News World</a> RSS，经
+        <a href="https://rss2json.com/" target="_blank" rel="noopener noreferrer">rss2json</a> 转为 JSON 后在浏览器展示；标题与摘要为原文，仅供阅读参考。
+      </p>
+    </section>
+  </div>
+
+  <script>
+    (function () {
+      var RSS_URL = "https://feeds.bbci.co.uk/news/world/rss.xml";
+      var MAX_ITEMS = 20;
+      var statusEl = document.getElementById("news-status");
+      var listEl = document.getElementById("news-list");
+      var metaEl = document.getElementById("news-meta");
+      var refreshBtn = document.getElementById("news-refresh");
+      var fetchCtrl = null;
+
+      function escapeHtml(str) {
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      function formatTime(pubDate) {
+        if (!pubDate) return "";
+        var d = new Date(pubDate.replace(" ", "T"));
+        if (isNaN(d.getTime())) {
+          d = new Date(pubDate);
+        }
+        if (isNaN(d.getTime())) return pubDate;
+        return (
+          d.getFullYear() +
+          "-" +
+          pad(d.getMonth() + 1) +
+          "-" +
+          pad(d.getDate()) +
+          " " +
+          pad(d.getHours()) +
+          ":" +
+          pad(d.getMinutes())
+        );
+      }
+
+      function pad(n) {
+        return n < 10 ? "0" + n : String(n);
+      }
+
+      function getRss2JsonKey() {
+        try {
+          return (localStorage.getItem("huangli_rss2json_key") || "").trim();
+        } catch (e) {
+          return "";
+        }
+      }
+
+      function buildApiUrl() {
+        var key = getRss2JsonKey();
+        var q =
+          "https://api.rss2json.com/v1/api.json?rss_url=" + encodeURIComponent(RSS_URL);
+        if (key) {
+          q += "&api_key=" + encodeURIComponent(key) + "&count=" + MAX_ITEMS;
+        }
+        return q;
+      }
+
+      function renderItems(items, feedTitle) {
+        if (!items.length) {
+          statusEl.textContent = "暂无新闻条目，请稍后刷新。";
+          statusEl.className = "news-status";
+          listEl.hidden = true;
+          return;
+        }
+        statusEl.hidden = true;
+        listEl.hidden = false;
+        var html = "";
+        for (var i = 0; i < items.length; i++) {
+          var it = items[i];
+          var title = it.title || "（无标题）";
+          var link = it.link || "#";
+          var desc = (it.description || it.content || "").replace(/<[^>]+>/g, "").trim();
+          if (desc.length > 160) desc = desc.slice(0, 159) + "…";
+          var thumb = it.thumbnail || (it.enclosure && it.enclosure.link) || "";
+          var thumbHtml = thumb
+            ? '<img class="news-thumb" src="' + escapeHtml(thumb) + '" alt="" loading="lazy" decoding="async"/>'
+            : "";
+          html +=
+            '<li class="news-item">' +
+            '<div class="news-item-body">' +
+            "<h2><a href=\"" +
+            escapeHtml(link) +
+            '" target="_blank" rel="noopener noreferrer">' +
+            escapeHtml(title) +
+            "</a></h2>" +
+            (desc ? "<p>" + escapeHtml(desc) + "</p>" : "") +
+            "<time datetime=\"" +
+            escapeHtml(it.pubDate || "") +
+            "\">" +
+            escapeHtml(formatTime(it.pubDate)) +
+            "</time>" +
+            "</div>" +
+            thumbHtml +
+            "</li>";
+        }
+        listEl.innerHTML = html;
+        metaEl.textContent =
+          "来源：" +
+          (feedTitle || "BBC News World") +
+          " · 共 " +
+          items.length +
+          " 条 · 更新于 " +
+          formatTime(new Date().toISOString());
+      }
+
+      function loadNews() {
+        if (fetchCtrl) fetchCtrl.abort();
+        fetchCtrl = new AbortController();
+        refreshBtn.disabled = true;
+        statusEl.hidden = false;
+        statusEl.className = "news-status";
+        statusEl.textContent = "正在加载最新国际要闻…";
+        listEl.hidden = true;
+        metaEl.textContent = "正在连接新闻源…";
+
+        fetch(buildApiUrl(), { signal: fetchCtrl.signal })
+          .then(function (res) {
+            return res.json();
+          })
+          .then(function (data) {
+            if (data.status !== "ok") {
+              throw new Error(data.message || "接口返回异常");
+            }
+            var feedTitle = data.feed && data.feed.title ? data.feed.title : "BBC News";
+            var items = data.items || [];
+            if (items.length > MAX_ITEMS) {
+              items = items.slice(0, MAX_ITEMS);
+            }
+            renderItems(items, feedTitle);
+          })
+          .catch(function (err) {
+            if (err.name === "AbortError") return;
+            statusEl.hidden = false;
+            listEl.hidden = true;
+            statusEl.className = "news-status err";
+            statusEl.innerHTML =
+              "加载失败：" +
+              escapeHtml(err.message || "未知错误") +
+              "。请检查网络后点「刷新」重试；若仍失败，可到 rss2json.com 注册免费密钥，在控制台执行 localStorage.setItem('huangli_rss2json_key','你的密钥') 后刷新。";
+            metaEl.textContent = "加载失败";
+          })
+          .finally(function () {
+            refreshBtn.disabled = false;
+          });
+      }
+
+      refreshBtn.addEventListener("click", loadNews);
+      loadNews();
+    })();
+  </script>
+</body>
+</html>
