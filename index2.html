@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#e1e2eb" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0b0c10" media="(prefers-color-scheme: dark)" />
+  <meta name="description" content="国际新闻聚合：BBC、Reuters、NHK、Al Jazeera、NPR、Guardian 等多源 RSS，中文界面、自动刷新与本地缓存。" />
+  <meta name="color-scheme" content="light dark" />
+  <meta property="og:title" content="国际新闻 · 坏KiKi日历" />
+  <meta property="og:description" content="多源国际新闻聚合，浏览器直读 RSS。" />
+  <meta property="og:type" content="website" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230071e3'/%3E%3Ctext x='50%25' y='62%25' text-anchor='middle' font-size='34' fill='white' font-family='-apple-system,sans-serif' font-weight='700'%3EN%3C/text%3E%3C/svg%3E" />
+  <title>国际新闻 · 坏KiKi日历</title>
+  <link rel="preconnect" href="https://api.rss2json.com" crossorigin />
+  <style>
+    :root {
+      color-scheme: light dark;
+
+      --apple-bg: #e1e2eb;
+      --apple-bg-gradient-1: rgba(232, 234, 244, 0.88);
+      --apple-bg-gradient-2: rgba(198, 208, 232, 0.32);
+      --apple-card: rgba(255, 255, 255, 0.62);
+      --apple-card-raised: rgba(255, 255, 255, 0.88);
+      --apple-card-border: rgba(0, 0, 0, 0.08);
+      --apple-card-border-soft: rgba(0, 0, 0, 0.06);
+      --apple-surface-hover: rgba(255, 255, 255, 0.78);
+      --apple-surface-foot: rgba(255, 255, 255, 0.32);
+      --apple-text: #1d1d1f;
+      --apple-text-secondary: #515154;
+      --apple-text-tertiary: #86868b;
+      --apple-separator: rgba(0, 0, 0, 0.08);
+      --apple-blue: #0071e3;
+      --apple-blue-hover: #0077ed;
+      --apple-blue-soft: rgba(0, 113, 227, 0.12);
+      --apple-fill: rgba(120, 120, 128, 0.12);
+      --apple-fill-hover: rgba(120, 120, 128, 0.2);
+      --apple-shadow: 0 2px 12px rgba(0, 0, 0, 0.05), 0 12px 40px rgba(0, 0, 0, 0.06);
+      --apple-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+      --apple-radius-lg: 18px;
+      --apple-radius-md: 12px;
+      --apple-radius-sm: 8px;
+      --apple-radius-pill: 980px;
+      --apple-err: #c62828;
+      --apple-thumb-placeholder: rgba(0, 0, 0, 0.06);
+      --skeleton-base: rgba(0, 0, 0, 0.06);
+      --skeleton-shine: rgba(0, 0, 0, 0.03);
+      --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236e6e73' d='M2.5 4.5L6 8l3.5-3.5'/%3E%3C/svg%3E");
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --apple-bg: #0b0c10;
+        --apple-bg-gradient-1: rgba(38, 42, 58, 0.6);
+        --apple-bg-gradient-2: rgba(20, 28, 52, 0.5);
+        --apple-card: rgba(36, 38, 46, 0.72);
+        --apple-card-raised: rgba(48, 50, 58, 0.85);
+        --apple-card-border: rgba(255, 255, 255, 0.08);
+        --apple-card-border-soft: rgba(255, 255, 255, 0.06);
+        --apple-surface-hover: rgba(255, 255, 255, 0.08);
+        --apple-surface-foot: rgba(255, 255, 255, 0.025);
+        --apple-text: #f5f5f7;
+        --apple-text-secondary: #b8b8be;
+        --apple-text-tertiary: #8a8a90;
+        --apple-separator: rgba(255, 255, 255, 0.1);
+        --apple-blue: #2e8aff;
+        --apple-blue-hover: #4a9aff;
+        --apple-blue-soft: rgba(46, 138, 255, 0.18);
+        --apple-fill: rgba(255, 255, 255, 0.08);
+        --apple-fill-hover: rgba(255, 255, 255, 0.14);
+        --apple-shadow: 0 2px 12px rgba(0, 0, 0, 0.45), 0 12px 40px rgba(0, 0, 0, 0.35);
+        --apple-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+        --apple-err: #ff6b6b;
+        --apple-thumb-placeholder: rgba(255, 255, 255, 0.06);
+        --skeleton-base: rgba(255, 255, 255, 0.06);
+        --skeleton-shine: rgba(255, 255, 255, 0.1);
+        --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23b8b8be' d='M2.5 4.5L6 8l3.5-3.5'/%3E%3C/svg%3E");
+      }
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro SC", "SF Pro Text", "PingFang SC",
+        "Hiragino Sans GB", "Microsoft YaHei UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      color: var(--apple-text);
+      background:
+        radial-gradient(100% 120% at 50% -15%, var(--apple-bg-gradient-1) 0%, transparent 52%),
+        radial-gradient(80% 60% at 100% 100%, var(--apple-bg-gradient-2) 0%, transparent 50%),
+        var(--apple-bg);
+      background-attachment: fixed;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+    }
+    :focus-visible {
+      outline: 2px solid var(--apple-blue);
+      outline-offset: 3px;
+      border-radius: 6px;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+      }
+    }
+    .skeleton {
+      background: linear-gradient(90deg, var(--skeleton-base) 0%, var(--skeleton-shine) 50%, var(--skeleton-base) 100%);
+      background-size: 200% 100%;
+      animation: skel-shine 1.4s ease-in-out infinite;
+      border-radius: 6px;
+    }
+    @keyframes skel-shine {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    .wrap {
+      position: relative;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 1.5rem max(1.25rem, env(safe-area-inset-right)) 3rem max(1.25rem, env(safe-area-inset-left));
+    }
+    .top-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+      position: sticky;
+      top: max(0.5rem, env(safe-area-inset-top));
+      z-index: 5;
+      padding: 0.6rem 0.85rem;
+      background: var(--apple-card-raised);
+      border: 1px solid var(--apple-card-border);
+      border-radius: var(--apple-radius-pill);
+      box-shadow: var(--apple-shadow-sm);
+      backdrop-filter: blur(22px) saturate(1.25);
+      -webkit-backdrop-filter: blur(22px) saturate(1.25);
+    }
+    @media (max-width: 599px) {
+      .top-bar {
+        border-radius: var(--apple-radius-md);
+        padding: 0.55rem 0.65rem;
+      }
+    }
+    .top-bar h1 {
+      margin: 0;
+      font-size: 1.125rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+    .top-bar h1::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--apple-blue);
+      box-shadow: 0 0 0 3px var(--apple-blue-soft);
+    }
+    .top-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      align-items: center;
+    }
+    .btn-link,
+    .btn-pill {
+      font-family: inherit;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      text-decoration: none;
+      padding: 0.42rem 0.85rem;
+      border-radius: var(--apple-radius-pill);
+      border: 1px solid transparent;
+      background: var(--apple-fill);
+      color: var(--apple-text);
+      cursor: pointer;
+      transition: background 0.2s ease, color 0.2s ease, transform 0.12s ease;
+      white-space: nowrap;
+      min-height: 32px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .btn-link {
+      color: var(--apple-blue);
+      background: transparent;
+    }
+    .btn-link:hover {
+      background: var(--apple-fill);
+    }
+    .btn-pill:hover:not(:disabled) {
+      background: var(--apple-fill-hover);
+    }
+    .btn-pill:active {
+      transform: scale(0.96);
+    }
+    .btn-pill:disabled {
+      opacity: 0.55;
+      cursor: wait;
+    }
+    .btn-pill.is-loading::before {
+      content: "";
+      display: inline-block;
+      width: 0.7rem;
+      height: 0.7rem;
+      border-radius: 50%;
+      border: 2px solid currentColor;
+      border-top-color: transparent;
+      animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .source-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-bottom: 0.85rem;
+      align-items: center;
+    }
+    @media (max-width: 599px) {
+      .source-bar {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        padding-bottom: 2px;
+      }
+      .source-bar::-webkit-scrollbar { display: none; }
+    }
+    .source-chip {
+      font-family: inherit;
+      font-size: 0.75rem;
+      font-weight: 500;
+      padding: 0.42rem 0.75rem;
+      border-radius: var(--apple-radius-pill);
+      border: none;
+      background: var(--apple-fill);
+      color: var(--apple-text);
+      cursor: pointer;
+      transition: background 0.2s ease, color 0.2s ease, transform 0.12s ease;
+      white-space: nowrap;
+      flex-shrink: 0;
+      min-height: 32px;
+    }
+    .source-chip:hover {
+      background: var(--apple-fill-hover);
+    }
+    .source-chip:active {
+      transform: scale(0.96);
+    }
+    .source-chip.active {
+      background: var(--apple-blue);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(0, 113, 227, 0.28);
+    }
+    .news-meta {
+      margin: 0 0 1rem;
+      font-size: 0.75rem;
+      color: var(--apple-text-secondary);
+      line-height: 1.5;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.4rem 0.85rem;
+    }
+    .news-meta .meta-dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--apple-text-tertiary);
+      display: inline-block;
+    }
+    .news-meta .cache-badge {
+      padding: 0.18rem 0.55rem;
+      font-size: 0.625rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      border-radius: var(--apple-radius-pill);
+      background: var(--apple-blue-soft);
+      color: var(--apple-blue);
+    }
+    .news-card {
+      background: var(--apple-card);
+      backdrop-filter: blur(22px) saturate(1.25);
+      -webkit-backdrop-filter: blur(22px) saturate(1.25);
+      border: 1px solid var(--apple-card-border);
+      border-radius: var(--apple-radius-lg);
+      box-shadow: var(--apple-shadow);
+      overflow: hidden;
+    }
+    .news-status {
+      margin: 0;
+      padding: 2rem 1.25rem;
+      text-align: center;
+      font-size: 0.875rem;
+      color: var(--apple-text-secondary);
+      line-height: 1.6;
+    }
+    .news-status.err {
+      color: var(--apple-err);
+    }
+    .news-status .retry-btn {
+      display: inline-block;
+      margin-top: 0.85rem;
+      font-family: inherit;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      padding: 0.45rem 1rem;
+      border-radius: var(--apple-radius-pill);
+      border: none;
+      background: var(--apple-blue);
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.12s ease;
+    }
+    .news-status .retry-btn:hover {
+      background: var(--apple-blue-hover);
+    }
+    .news-status .retry-btn:active {
+      transform: scale(0.97);
+    }
+    .news-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .news-item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.75rem 1rem;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--apple-separator);
+      align-items: start;
+      transition: background 0.18s ease;
+    }
+    .news-item:hover {
+      background: var(--apple-surface-hover);
+    }
+    .news-item:last-child {
+      border-bottom: none;
+    }
+    .news-item-body {
+      min-width: 0;
+    }
+    .news-item h2 {
+      margin: 0 0 0.35rem;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      line-height: 1.45;
+      letter-spacing: -0.01em;
+    }
+    .news-item h2 a {
+      color: var(--apple-text);
+      text-decoration: none;
+    }
+    .news-item h2 a:hover {
+      color: var(--apple-blue);
+    }
+    .news-item p {
+      margin: 0;
+      font-size: 0.8125rem;
+      line-height: 1.55;
+      color: var(--apple-text-secondary);
+    }
+    .news-item-meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.35rem 0.55rem;
+      margin-top: 0.45rem;
+      font-size: 0.6875rem;
+      color: var(--apple-text-tertiary);
+    }
+    .news-item-meta time { font-variant-numeric: tabular-nums; }
+    .news-item-meta .item-tag {
+      padding: 0.1rem 0.45rem;
+      border-radius: var(--apple-radius-pill);
+      background: var(--apple-fill);
+      color: var(--apple-text-secondary);
+      font-weight: 500;
+    }
+    .news-thumb-wrap {
+      width: 5rem;
+      height: 5rem;
+      border-radius: 10px;
+      overflow: hidden;
+      flex-shrink: 0;
+      background: var(--apple-thumb-placeholder);
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .news-thumb-wrap svg.fallback {
+      width: 28px;
+      height: 28px;
+      color: var(--apple-text-tertiary);
+      opacity: 0.6;
+    }
+    .news-thumb {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .news-thumb.hidden { display: none; }
+    @media (max-width: 480px) {
+      .news-thumb-wrap {
+        width: 4rem;
+        height: 4rem;
+      }
+      .news-item {
+        padding: 0.85rem 1rem;
+        gap: 0.65rem 0.75rem;
+      }
+    }
+    .news-foot {
+      margin: 1rem 0 0;
+      padding: 0.9rem 1.25rem;
+      font-size: 0.6875rem;
+      line-height: 1.6;
+      color: var(--apple-text-tertiary);
+      border-top: 1px solid var(--apple-separator);
+      background: var(--apple-surface-foot);
+    }
+    .news-foot a {
+      color: var(--apple-blue);
+      text-decoration: none;
+    }
+    .news-foot a:hover {
+      text-decoration: underline;
+    }
+    .auto-refresh-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.75rem;
+      color: var(--apple-text-secondary);
+      cursor: pointer;
+      user-select: none;
+    }
+    .auto-refresh-toggle input {
+      appearance: none;
+      width: 32px;
+      height: 18px;
+      background: var(--apple-fill);
+      border-radius: var(--apple-radius-pill);
+      position: relative;
+      cursor: pointer;
+      transition: background 0.2s ease;
+      flex-shrink: 0;
+    }
+    .auto-refresh-toggle input::before {
+      content: "";
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+      transition: transform 0.2s ease;
+    }
+    .auto-refresh-toggle input:checked {
+      background: var(--apple-blue);
+    }
+    .auto-refresh-toggle input:checked::before {
+      transform: translateX(14px);
+    }
+    .news-skeleton-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.75rem 1rem;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--apple-separator);
+    }
+    .news-skeleton-row:last-child { border-bottom: none; }
+    .news-skeleton-body { display: flex; flex-direction: column; gap: 0.45rem; }
+    .news-skeleton-line { height: 0.9rem; border-radius: 6px; }
+    .news-skeleton-line.title { width: 78%; height: 1.05rem; }
+    .news-skeleton-line.short { width: 90%; }
+    .news-skeleton-line.shorter { width: 60%; }
+    .news-skeleton-line.tiny { width: 35%; height: 0.65rem; margin-top: 0.2rem; }
+    .news-skeleton-thumb {
+      width: 5rem;
+      height: 5rem;
+      border-radius: 10px;
+    }
+    @media (max-width: 480px) {
+      .news-skeleton-thumb {
+        width: 4rem;
+        height: 4rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top-bar">
+      <h1>国际新闻</h1>
+      <div class="top-actions">
+        <label class="auto-refresh-toggle" title="开启后每 5 分钟自动刷新">
+          <input type="checkbox" id="auto-refresh" />
+          <span>自动刷新</span>
+        </label>
+        <button type="button" class="btn-pill" id="news-refresh" aria-label="刷新新闻">刷新</button>
+        <a class="btn-link" href="index.html">← 日历</a>
+      </div>
+    </div>
+
+    <div class="source-bar" role="tablist" aria-label="新闻源切换" id="source-bar">
+      <!-- 动态注入 -->
+    </div>
+
+    <p class="news-meta" id="news-meta" aria-live="polite">
+      <span id="news-meta-text">正在加载最新国际要闻…</span>
+    </p>
+    <section class="news-card" aria-label="国际新闻列表">
+      <div id="news-skeleton" aria-hidden="true">
+        <!-- 初始骨架屏，5 行 -->
+      </div>
+      <p class="news-status" id="news-status" hidden></p>
+      <ul class="news-list" id="news-list" hidden></ul>
+      <p class="news-foot">
+        数据由各家公开 RSS 经 <a href="https://rss2json.com/" target="_blank" rel="noopener noreferrer">rss2json</a> 转 JSON 后在浏览器直接展示；标题与摘要为原文，仅供阅读参考。RSS 与 rss2json 在大陆等网络环境下可能受限，必要时请使用国际网络或配置自有密钥。
+      </p>
+    </section>
+  </div>
+
+  <script>
+    (function () {
+      var SOURCES = [
+        { id: "bbc",       name: "BBC",        rss: "https://feeds.bbci.co.uk/news/world/rss.xml",                    tag: "英国" },
+        { id: "reuters",   name: "Reuters",    rss: "https://feeds.reuters.com/Reuters/worldNews",                     tag: "国际" },
+        { id: "guardian",  name: "Guardian",   rss: "https://www.theguardian.com/world/rss",                           tag: "英国" },
+        { id: "nyt",       name: "NY Times",   rss: "https://rss.nytimes.com/services/xml/rss/nyt/World.xml",          tag: "美国" },
+        { id: "npr",       name: "NPR",        rss: "https://feeds.npr.org/1004/rss.xml",                              tag: "美国" },
+        { id: "ap",        name: "AP",         rss: "https://feedx.net/rss/ap.xml",                                    tag: "美国" },
+        { id: "aljazeera", name: "Al Jazeera", rss: "https://www.aljazeera.com/xml/rss/all.xml",                       tag: "中东" },
+        { id: "nhk",       name: "NHK World",  rss: "https://www3.nhk.or.jp/nhkworld/en/news/feeds/",                  tag: "日本" },
+        { id: "dw",        name: "DW",         rss: "https://rss.dw.com/rdf/rss-en-world",                             tag: "德国" }
+      ];
+
+      var MAX_ITEMS = 24;
+      var CACHE_TTL = 5 * 60 * 1000;
+      var STORAGE_PREFIX = "kiki_news_cache_v2:";
+      var STORAGE_SRC_KEY = "kiki_news_current_source";
+      var STORAGE_AUTO_KEY = "kiki_news_auto_refresh";
+      var AUTO_INTERVAL = 5 * 60 * 1000;
+
+      var srcBar = document.getElementById("source-bar");
+      var statusEl = document.getElementById("news-status");
+      var listEl = document.getElementById("news-list");
+      var metaEl = document.getElementById("news-meta-text");
+      var metaWrap = document.getElementById("news-meta");
+      var skeletonEl = document.getElementById("news-skeleton");
+      var refreshBtn = document.getElementById("news-refresh");
+      var autoBox = document.getElementById("auto-refresh");
+      var fetchCtrl = null;
+      var autoTimer = null;
+      var currentSourceId = "bbc";
+
+      function escapeHtml(str) {
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+      function pad(n) { return n < 10 ? "0" + n : String(n); }
+
+      function readStorage(key) {
+        try { return localStorage.getItem(key); } catch (e) { return null; }
+      }
+      function writeStorage(key, val) {
+        try { localStorage.setItem(key, val); } catch (e) {}
+      }
+      function removeStorage(key) {
+        try { localStorage.removeItem(key); } catch (e) {}
+      }
+
+      function getRss2JsonKey() {
+        var k = readStorage("huangli_rss2json_key");
+        return (k || "").trim();
+      }
+
+      function buildApiUrl(rssUrl) {
+        var key = getRss2JsonKey();
+        var q = "https://api.rss2json.com/v1/api.json?rss_url=" + encodeURIComponent(rssUrl);
+        if (key) {
+          q += "&api_key=" + encodeURIComponent(key) + "&count=" + MAX_ITEMS;
+        }
+        return q;
+      }
+
+      function getSource(id) {
+        for (var i = 0; i < SOURCES.length; i++) if (SOURCES[i].id === id) return SOURCES[i];
+        return SOURCES[0];
+      }
+
+      function renderSourceBar() {
+        var html = "";
+        for (var i = 0; i < SOURCES.length; i++) {
+          var s = SOURCES[i];
+          html +=
+            '<button type="button" class="source-chip' +
+            (s.id === currentSourceId ? " active" : "") +
+            '" data-src="' +
+            escapeHtml(s.id) +
+            '" title="' +
+            escapeHtml(s.tag + " · " + s.rss) +
+            '">' +
+            escapeHtml(s.name) +
+            "</button>";
+        }
+        srcBar.innerHTML = html;
+      }
+
+      function renderSkeleton(n) {
+        var html = "";
+        for (var i = 0; i < (n || 5); i++) {
+          html +=
+            '<div class="news-skeleton-row">' +
+            '<div class="news-skeleton-body">' +
+            '<div class="skeleton news-skeleton-line title"></div>' +
+            '<div class="skeleton news-skeleton-line short"></div>' +
+            '<div class="skeleton news-skeleton-line shorter"></div>' +
+            '<div class="skeleton news-skeleton-line tiny"></div>' +
+            "</div>" +
+            '<div class="skeleton news-skeleton-thumb"></div>' +
+            "</div>";
+        }
+        skeletonEl.innerHTML = html;
+        skeletonEl.hidden = false;
+      }
+
+      function hideSkeleton() {
+        skeletonEl.hidden = true;
+        skeletonEl.innerHTML = "";
+      }
+
+      function formatTime(pubDate) {
+        if (!pubDate) return "";
+        var d = new Date(pubDate.replace(" ", "T"));
+        if (isNaN(d.getTime())) d = new Date(pubDate);
+        if (isNaN(d.getTime())) return pubDate;
+        return (
+          d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) +
+          " " + pad(d.getHours()) + ":" + pad(d.getMinutes())
+        );
+      }
+
+      function relativeTime(pubDate) {
+        if (!pubDate) return "";
+        var d = new Date(pubDate.replace(" ", "T"));
+        if (isNaN(d.getTime())) d = new Date(pubDate);
+        if (isNaN(d.getTime())) return "";
+        var diff = Date.now() - d.getTime();
+        if (diff < 0) return "刚刚";
+        var m = Math.floor(diff / 60000);
+        if (m < 1) return "刚刚";
+        if (m < 60) return m + " 分钟前";
+        var h = Math.floor(m / 60);
+        if (h < 24) return h + " 小时前";
+        var dd = Math.floor(h / 24);
+        if (dd < 30) return dd + " 天前";
+        var mo = Math.floor(dd / 30);
+        if (mo < 12) return mo + " 个月前";
+        return Math.floor(mo / 12) + " 年前";
+      }
+
+      var FALLBACK_SVG =
+        '<svg class="fallback" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' +
+        '<rect x="3" y="5" width="18" height="14" rx="2"/>' +
+        '<path d="M7 9h6M7 13h10M7 17h7"/>' +
+        "</svg>";
+
+      function renderItems(items, source, feedTitle, fromCache, ts) {
+        if (!items.length) {
+          hideSkeleton();
+          statusEl.hidden = false;
+          statusEl.className = "news-status";
+          statusEl.textContent = "暂无新闻条目，请稍后刷新。";
+          listEl.hidden = true;
+          return;
+        }
+        hideSkeleton();
+        statusEl.hidden = true;
+        listEl.hidden = false;
+
+        var html = "";
+        for (var i = 0; i < items.length; i++) {
+          var it = items[i];
+          var title = it.title || "（无标题）";
+          var link = it.link || "#";
+          var desc = (it.description || it.content || "").replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
+          if (desc.length > 160) desc = desc.slice(0, 159) + "…";
+          var thumb = it.thumbnail || (it.enclosure && it.enclosure.link) || "";
+          if (thumb && /^https?:\/\//i.test(thumb) === false) thumb = "";
+          var rel = relativeTime(it.pubDate);
+          var abs = formatTime(it.pubDate);
+          html +=
+            '<li class="news-item">' +
+            '<div class="news-item-body">' +
+            '<h2><a href="' + escapeHtml(link) + '" target="_blank" rel="noopener noreferrer">' +
+            escapeHtml(title) + "</a></h2>" +
+            (desc ? "<p>" + escapeHtml(desc) + "</p>" : "") +
+            '<div class="news-item-meta">' +
+            '<span class="item-tag">' + escapeHtml(source.name) + "</span>" +
+            (rel ? '<time datetime="' + escapeHtml(it.pubDate || "") + '" title="' + escapeHtml(abs) + '">' + escapeHtml(rel) + "</time>" : "") +
+            (abs && abs !== rel ? "<span>" + escapeHtml(abs) + "</span>" : "") +
+            "</div>" +
+            "</div>" +
+            '<div class="news-thumb-wrap">' +
+            (thumb
+              ? '<img class="news-thumb" src="' + escapeHtml(thumb) + '" alt="" loading="lazy" decoding="async" onerror="this.classList.add(\'hidden\');this.nextElementSibling&&(this.nextElementSibling.style.display=\'inline-block\')"/>' + FALLBACK_SVG
+              : FALLBACK_SVG) +
+            "</div>" +
+            "</li>";
+        }
+        listEl.innerHTML = html;
+
+        var bits = [];
+        bits.push("来源：" + (feedTitle || source.name));
+        bits.push("共 " + items.length + " 条");
+        bits.push("更新于 " + formatTime(new Date(ts || Date.now()).toISOString()));
+        var metaHtml = bits.map(escapeHtml).join('<span class="meta-dot" aria-hidden="true"></span>');
+        if (fromCache) {
+          metaHtml += '<span class="cache-badge" title="使用本地缓存，无需重新请求网络">缓存</span>';
+        }
+        metaEl.innerHTML = metaHtml;
+      }
+
+      function cacheKey(srcId) { return STORAGE_PREFIX + srcId; }
+
+      function readCache(srcId) {
+        var raw = readStorage(cacheKey(srcId));
+        if (!raw) return null;
+        try {
+          var obj = JSON.parse(raw);
+          if (!obj || !obj.ts || !obj.items) return null;
+          return obj;
+        } catch (e) { return null; }
+      }
+
+      function writeCache(srcId, items, feedTitle) {
+        writeStorage(cacheKey(srcId), JSON.stringify({
+          ts: Date.now(),
+          feedTitle: feedTitle || "",
+          items: items.slice(0, MAX_ITEMS)
+        }));
+      }
+
+      function showStatus(text, isErr, retry) {
+        hideSkeleton();
+        listEl.hidden = true;
+        statusEl.hidden = false;
+        statusEl.className = "news-status" + (isErr ? " err" : "");
+        statusEl.innerHTML = text + (retry ? '<br/><button type="button" class="retry-btn" id="retry-btn">重试</button>' : "");
+        if (retry) {
+          var rb = document.getElementById("retry-btn");
+          if (rb) rb.addEventListener("click", function () { loadNews(true); });
+        }
+      }
+
+      function loadNews(force) {
+        var src = getSource(currentSourceId);
+        renderSourceBar();
+
+        if (!force) {
+          var cached = readCache(src.id);
+          if (cached && (Date.now() - cached.ts < CACHE_TTL)) {
+            renderItems(cached.items, src, cached.feedTitle, true, cached.ts);
+            return;
+          }
+        }
+
+        if (fetchCtrl) fetchCtrl.abort();
+        fetchCtrl = new AbortController();
+        refreshBtn.disabled = true;
+        refreshBtn.classList.add("is-loading");
+        renderSkeleton(5);
+        listEl.hidden = true;
+        statusEl.hidden = true;
+        metaEl.textContent = "正在连接 " + src.name + " …";
+
+        fetch(buildApiUrl(src.rss), { signal: fetchCtrl.signal })
+          .then(function (res) {
+            if (!res.ok) throw new Error("接口返回 " + res.status);
+            return res.json();
+          })
+          .then(function (data) {
+            if (data.status !== "ok") {
+              throw new Error(data.message || "接口返回异常");
+            }
+            var feedTitle = (data.feed && data.feed.title) || src.name;
+            var items = (data.items || []).slice(0, MAX_ITEMS);
+            writeCache(src.id, items, feedTitle);
+            renderItems(items, src, feedTitle, false);
+          })
+          .catch(function (err) {
+            if (err.name === "AbortError") return;
+
+            var stale = readCache(src.id);
+            if (stale && stale.items && stale.items.length) {
+              renderItems(stale.items, src, stale.feedTitle, true, stale.ts);
+              metaEl.innerHTML +=
+                '<span class="cache-badge" style="background:rgba(255,149,0,.16);color:#b97200">离线数据</span>';
+              return;
+            }
+            showStatus(
+              "加载失败：" + escapeHtml(err.message || "未知错误") +
+              "。<br/>RSS 与 rss2json 在大陆等地常需国际网络；或在控制台执行 <code>localStorage.setItem('huangli_rss2json_key','你的密钥')</code> 后刷新。",
+              true,
+              true
+            );
+            metaEl.textContent = "加载失败";
+          })
+          .then(function () {
+            refreshBtn.disabled = false;
+            refreshBtn.classList.remove("is-loading");
+          });
+      }
+
+      function setupAutoRefresh() {
+        if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
+        if (autoBox.checked) {
+          autoTimer = setInterval(function () {
+            if (document.hidden) return;
+            loadNews(true);
+          }, AUTO_INTERVAL);
+        }
+      }
+
+      srcBar.addEventListener("click", function (e) {
+        var btn = e.target.closest(".source-chip");
+        if (!btn) return;
+        var id = btn.getAttribute("data-src");
+        if (id === currentSourceId) return;
+        currentSourceId = id;
+        writeStorage(STORAGE_SRC_KEY, id);
+        loadNews(false);
+      });
+
+      refreshBtn.addEventListener("click", function () { loadNews(true); });
+
+      autoBox.addEventListener("change", function () {
+        writeStorage(STORAGE_AUTO_KEY, autoBox.checked ? "1" : "0");
+        setupAutoRefresh();
+      });
+
+      document.addEventListener("visibilitychange", function () {
+        if (!document.hidden && autoBox.checked) {
+          var src = getSource(currentSourceId);
+          var c = readCache(src.id);
+          if (!c || Date.now() - c.ts > CACHE_TTL) loadNews(true);
+        }
+      });
+
+      (function init() {
+        var savedSrc = readStorage(STORAGE_SRC_KEY);
+        if (savedSrc) {
+          for (var i = 0; i < SOURCES.length; i++) {
+            if (SOURCES[i].id === savedSrc) { currentSourceId = savedSrc; break; }
+          }
+        }
+        var savedAuto = readStorage(STORAGE_AUTO_KEY);
+        autoBox.checked = savedAuto === null ? true : savedAuto === "1";
+
+        renderSourceBar();
+        renderSkeleton(5);
+        loadNews(false);
+        setupAutoRefresh();
+      })();
+    })();
+  </script>
+</body>
+</html>
