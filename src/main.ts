@@ -1,5 +1,5 @@
 import './style.css'
-import { Aquarium, FOOD_UPGRADE_COST, GODZILLA_COST } from './aquarium.ts'
+import { Aquarium, FOOD_UPGRADE_COST, GODZILLA_COST, LAZIJI_COST } from './aquarium.ts'
 
 function start() {
   const canvas = document.querySelector<HTMLCanvasElement>('#tank')
@@ -7,14 +7,26 @@ function start() {
   const diamondCount = document.querySelector<HTMLElement>('#diamond-count')
   const kaijuAction = document.querySelector<HTMLButtonElement>('#kaiju-action')
   const foodUpgrade = document.querySelector<HTMLButtonElement>('#food-upgrade')
+  const lazijiBuy = document.querySelector<HTMLButtonElement>('#laziji-buy')
   const godzillaStatus = document.querySelector<HTMLElement>('#godzilla-status')
-  if (!canvas || !addButton || !diamondCount || !kaijuAction || !foodUpgrade || !godzillaStatus) return
+  if (
+    !canvas ||
+    !addButton ||
+    !diamondCount ||
+    !kaijuAction ||
+    !foodUpgrade ||
+    !lazijiBuy ||
+    !godzillaStatus
+  ) {
+    return
+  }
 
   const ctx = canvas.getContext('2d')
   if (!ctx) {
     addButton.disabled = true
     kaijuAction.disabled = true
     foodUpgrade.disabled = true
+    lazijiBuy.disabled = true
     return
   }
 
@@ -25,6 +37,8 @@ function start() {
     godzillaCharges: number
     godzillaMaxed: boolean
     foodUpgraded: boolean
+    lazijiOwned: boolean
+    marukoBanished: boolean
   }) => {
     diamondCount.textContent = String(stats.diamonds)
     if (stats.hasGodzilla) {
@@ -52,6 +66,16 @@ function start() {
       foodUpgrade.disabled = stats.diamonds < FOOD_UPGRADE_COST
       foodUpgrade.classList.remove('is-owned')
     }
+
+    if (stats.lazijiOwned) {
+      lazijiBuy.textContent = stats.marukoBanished ? '小丸子已封印' : '辣子鸡已就绪'
+      lazijiBuy.disabled = true
+      lazijiBuy.classList.add('is-owned')
+    } else {
+      lazijiBuy.textContent = `购买辣子鸡 · ${LAZIJI_COST}`
+      lazijiBuy.disabled = stats.diamonds < LAZIJI_COST
+      lazijiBuy.classList.remove('is-owned')
+    }
   }
 
   const aquarium = new Aquarium(ctx, {
@@ -64,6 +88,8 @@ function start() {
         godzillaCharges: stats.godzillaCharges,
         godzillaMaxed: stats.godzillaMaxed,
         foodUpgraded: stats.foodUpgraded,
+        lazijiOwned: stats.lazijiOwned,
+        marukoBanished: stats.marukoBanished,
       }),
   })
 
@@ -99,6 +125,8 @@ function start() {
     godzillaCharges: aquarium.godzillaCharges,
     godzillaMaxed: aquarium.godzillaMaxed,
     foodUpgraded: aquarium.hasFoodUpgrade,
+    lazijiOwned: aquarium.hasLaziji,
+    marukoBanished: aquarium.isMarukoBanished,
   })
 
   const params = new URLSearchParams(location.search)
@@ -130,6 +158,8 @@ function start() {
         godzillaCharges: aquarium.godzillaCharges,
         godzillaMaxed: aquarium.godzillaMaxed,
         foodUpgraded: aquarium.hasFoodUpgrade,
+        lazijiOwned: aquarium.hasLaziji,
+        marukoBanished: aquarium.isMarukoBanished,
       })
     })
   }
@@ -150,6 +180,10 @@ function start() {
 
   foodUpgrade.addEventListener('click', () => {
     aquarium.buyFoodUpgrade()
+  })
+
+  lazijiBuy.addEventListener('click', () => {
+    aquarium.buyLaziji()
   })
 
   frameId = requestAnimationFrame(frame)

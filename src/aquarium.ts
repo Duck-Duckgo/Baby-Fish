@@ -11,6 +11,7 @@ import {
 } from './monster.ts'
 import {
   createGodzilla,
+  demoteGodzilla,
   drawGodzilla,
   GODZILLA_MAX_LEVEL,
   godzillaGone,
@@ -53,6 +54,8 @@ export interface AquariumStats {
   godzillaCharges: number
   godzillaMaxed: boolean
   foodUpgraded: boolean
+  lazijiOwned: boolean
+  marukoBanished: boolean
 }
 
 export interface AquariumOptions {
@@ -64,6 +67,8 @@ export interface AquariumOptions {
 export const GODZILLA_COST = 10
 /** Cost to unlock burger fish food. */
 export const FOOD_UPGRADE_COST = 20
+/** Cost to buy the spicy-chicken seal that banishes KiKi. */
+export const LAZIJI_COST = 100
 /** Seconds between diamond drops from a fully grown fish. */
 export const DIAMOND_INTERVAL = 5
 const MAX_FLOATING_DIAMONDS = 36
@@ -248,6 +253,10 @@ export class Aquarium {
   private diamondsHeld = 0
   private floatingDiamonds: FloatingDiamond[] = []
   private foodUpgraded = false
+  private lazijiOwned = false
+  private marukoBanished = false
+  /** Pull KiKi into the laziji bowl after purchase / next spawn. */
+  private sealingMaruko = false
   private weeds: Weed[] = []
   private pebbles: Pebble[] = []
   private decors: SandDecor[] = []
@@ -299,6 +308,18 @@ export class Aquarium {
 
   get hasFoodUpgrade() {
     return this.foodUpgraded
+  }
+
+  get hasLaziji() {
+    return this.lazijiOwned
+  }
+
+  get isMarukoBanished() {
+    return this.marukoBanished
+  }
+
+  private get lazijiBowl() {
+    return { x: this.width * 0.5, y: 56 }
   }
 
   resize(width: number, height: number) {
@@ -469,10 +490,11 @@ export class Aquarium {
 
   /** Spawns the round-faced hunter immediately (used by `?monster` preview). */
   spawnMonsterNow(): Monster | null {
-    if (this.width === 0) return null
+    if (this.width === 0 || this.marukoBanished) return null
     this.monster = createMonster(this.width, this.height, this.sandBase, this.fishScale)
     this.monsterTimer = 1e9
     playKikiAlert()
+    if (this.lazijiOwned) this.sealingMaruko = true
     return this.monster
   }
 
@@ -510,6 +532,16 @@ export class Aquarium {
     return true
   }
 
+  /** Buy the spicy-chicken bowl; the next KiKi appearance is sealed forever. */
+  buyLaziji(): boolean {
+    if (this.lazijiOwned || this.diamondsHeld < LAZIJI_COST) return false
+    this.diamondsHeld -= LAZIJI_COST
+    this.lazijiOwned = true
+    if (this.monster && !this.marukoBanished) this.sealingMaruko = true
+    this.emitStats()
+    return true
+  }
+
   /** Force-grow every fish to the cap (preview / demo). */
   maxGrowAll() {
     for (const f of this.fish) {
@@ -532,16 +564,17 @@ export class Aquarium {
     for (let i = 0; i < count; i++) this.spawnDiamondNear(pool[i % pool.length])
   }
 
-  /** Seed diamonds, upgraded guardian, burgers, and hunter for screenshots (`?demo`). */
+  /** Seed diamonds, upgraded guardian, burgers, laziji, and hunter for screenshots (`?demo`). */
   seedDemo() {
     this.maxGrowAll()
-    this.grantDiamonds(GODZILLA_COST * 12 + FOOD_UPGRADE_COST)
+    this.grantDiamonds(GODZILLA_COST * 12 + FOOD_UPGRADE_COST + LAZIJI_COST)
     this.burstDiamonds(8)
     this.buyGodzilla()
     while (this.godzilla && this.godzilla.level < GODZILLA_MAX_LEVEL) {
       if (!this.upgradeGodzilla()) break
     }
     this.buyFoodUpgrade()
+    this.buyLaziji()
     this.sprinkle(this.width * 0.55, this.height * 0.35, SPRINKLE_COUNT)
     this.spawnMonsterNow()
   }
@@ -596,6 +629,7 @@ export class Aquarium {
     for (const weed of this.weeds) if (weed.front) this.drawWeed(weed)
     this.drawBubbles()
     this.drawRipples()
+    if (this.lazijiOwned) this.drawLazijiBowl()
   }
 
   private get sandHeight() {
@@ -721,12 +755,25 @@ export class Aquarium {
   }
 
   private updateMonster(dt: number) {
+    if (this.marukoBanished) {
+      this.monster = null
+      this.monsterTimer = 1e9
+      this.sealingMaruko = false
+      return
+    }
+
     if (!this.monster) {
       this.monsterTimer -= dt
       if (this.monsterTimer <= 0 && this.fish.length > 0) {
         this.monster = createMonster(this.width, this.height, this.sandBase, this.fishScale)
         playKikiAlert()
+        if (this.lazijiOwned) this.sealingMaruko = true
       }
+      return
+    }
+
+    if (this.sealingMaruko) {
+      this.updateMarukoSeal(dt)
       return
     }
 
@@ -764,18 +811,55 @@ export class Aquarium {
     }
   }
 
+  private updateMarukoSeal(dt: number) {
+    const m = this.monster
+    if (!m) {
+      this.sealingMaruko = false
+      return
+    }
+    const bowl = this.lazijiBowl
+    const dx = bowl.x - m.x
+    const dy = bowl.y - m.y
+    const dist = Math.hypot(dx, dy) || 1
+    const speed = 160
+    m.x += (dx / dist) * speed * dt
+    m.y += (dy / dist) * speed * dt
+    m.vx = (dx / dist) * speed
+    m.vy = (dy / dist) * speed
+    m.facing = dx >= 0 ? 1 : -1
+    m.phase = 'leave'
+    m.alertLeft = Math.max(m.alertLeft, 0.4)
+    for (let i = 0; i < 2; i++) {
+      this.emitBubble(m.x + rand(-8, 8), m.y + rand(-6, 6), rand(1.5, 3), rand(40, 80))
+    }
+    if (dist < 22) {
+      this.monster = null
+      this.sealingMaruko = false
+      this.marukoBanished = true
+      this.monsterTimer = 1e9
+      this.emitStats()
+    }
+  }
+
   private updateGodzilla(dt: number) {
     if (!this.godzilla) return
     const prevCharges = this.godzilla.charges
     const prevPhase = this.godzilla.phase
+    const prevLevel = this.godzilla.level
     const hunter =
-      this.monster && (this.monster.phase === 'enter' || this.monster.phase === 'chase')
+      this.monster &&
+      !this.sealingMaruko &&
+      (this.monster.phase === 'enter' || this.monster.phase === 'chase')
         ? this.monster
         : null
     updateGodzilla(this.godzilla, dt, this.width, this.sandBase, hunter, () => {
       if (!this.monster || !this.godzilla) return
       if (this.monster.phase === 'leave') return
       driveMonsterAway(this.monster, this.godzilla.x, this.width)
+      if (this.godzilla.demoteOnSuccess) {
+        demoteGodzilla(this.godzilla)
+        this.godzilla.demoteOnSuccess = false
+      }
       for (let i = 0; i < 8; i++) {
         this.emitBubble(
           this.monster.x + rand(-14, 14),
@@ -790,7 +874,13 @@ export class Aquarium {
       this.emitStats()
       return
     }
-    if (this.godzilla.charges !== prevCharges || this.godzilla.phase !== prevPhase) this.emitStats()
+    if (
+      this.godzilla.charges !== prevCharges ||
+      this.godzilla.phase !== prevPhase ||
+      this.godzilla.level !== prevLevel
+    ) {
+      this.emitStats()
+    }
   }
 
   private updateFloatingDiamonds(dt: number) {
@@ -1072,7 +1162,139 @@ export class Aquarium {
       godzillaCharges: this.godzillaCharges,
       godzillaMaxed: this.godzillaMaxed,
       foodUpgraded: this.foodUpgraded,
+      lazijiOwned: this.lazijiOwned,
+      marukoBanished: this.marukoBanished,
     })
+  }
+
+  private drawLazijiBowl() {
+    const { ctx } = this
+    const { x, y } = this.lazijiBowl
+    const steam = Math.sin(this.time * 3)
+
+    ctx.save()
+    ctx.translate(x, y)
+
+    // Soft spotlight
+    const glow = ctx.createRadialGradient(0, 0, 8, 0, 0, 56)
+    glow.addColorStop(0, 'rgba(255, 120, 40, 0.35)')
+    glow.addColorStop(1, 'rgba(255, 120, 40, 0)')
+    ctx.fillStyle = glow
+    ctx.beginPath()
+    ctx.arc(0, 0, 56, 0, TAU)
+    ctx.fill()
+
+    // Bowl body
+    ctx.fillStyle = '#7f1d1d'
+    ctx.beginPath()
+    ctx.moveTo(-34, -4)
+    ctx.quadraticCurveTo(-36, 28, 0, 32)
+    ctx.quadraticCurveTo(36, 28, 34, -4)
+    ctx.closePath()
+    ctx.fill()
+    ctx.strokeStyle = '#450a0a'
+    ctx.lineWidth = 1.6
+    ctx.stroke()
+
+    // Rim
+    ctx.fillStyle = '#b91c1c'
+    ctx.beginPath()
+    ctx.ellipse(0, -6, 36, 10, 0, 0, TAU)
+    ctx.fill()
+    ctx.fillStyle = '#450a0a'
+    ctx.beginPath()
+    ctx.ellipse(0, -6, 28, 7, 0, 0, TAU)
+    ctx.fill()
+
+    // Chili oil surface
+    ctx.fillStyle = '#ea580c'
+    ctx.beginPath()
+    ctx.ellipse(0, -6, 26, 6, 0, 0, TAU)
+    ctx.fill()
+
+    // Chicken pieces
+    for (const [px, py, r] of [
+      [-10, -8, 6],
+      [4, -10, 5.5],
+      [12, -5, 5],
+      [-4, -3, 4.5],
+    ] as const) {
+      ctx.fillStyle = '#fbbf24'
+      ctx.beginPath()
+      ctx.arc(px, py, r, 0, TAU)
+      ctx.fill()
+      ctx.fillStyle = '#b45309'
+      ctx.beginPath()
+      ctx.arc(px - 1.5, py - 1.5, r * 0.35, 0, TAU)
+      ctx.fill()
+    }
+
+    // Chili peppers
+    ctx.strokeStyle = '#dc2626'
+    ctx.lineWidth = 2.2
+    ctx.lineCap = 'round'
+    for (const [x0, y0, x1, y1] of [
+      [-18, -4, -12, -14],
+      [16, -3, 22, -12],
+      [0, 0, 6, -12],
+    ] as const) {
+      ctx.beginPath()
+      ctx.moveTo(x0, y0)
+      ctx.quadraticCurveTo((x0 + x1) / 2 + 3, (y0 + y1) / 2, x1, y1)
+      ctx.stroke()
+    }
+
+    // Steam
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.55)'
+    ctx.lineWidth = 1.6
+    for (const [sx, amp] of [
+      [-12, 10],
+      [0, 14],
+      [12, 10],
+    ] as const) {
+      ctx.beginPath()
+      ctx.moveTo(sx, -14)
+      ctx.quadraticCurveTo(sx + steam * 4, -22 - amp * 0.3, sx + steam * 2, -28 - amp * 0.5)
+      ctx.stroke()
+    }
+
+    // Label
+    ctx.fillStyle = 'rgba(255, 247, 237, 0.95)'
+    ctx.font = 'bold 12px "PingFang SC", "Noto Sans SC", sans-serif'
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'top'
+    ctx.fillText('辣子鸡', 0, 36)
+
+    // Sealed KiKi face peeking from the oil when banished
+    if (this.marukoBanished) {
+      ctx.fillStyle = '#f6c9a8'
+      ctx.beginPath()
+      ctx.arc(0, -8, 9, 0, TAU)
+      ctx.fill()
+      ctx.fillStyle = '#111827'
+      ctx.beginPath()
+      ctx.moveTo(-6, -12)
+      ctx.lineTo(-3, -7)
+      ctx.lineTo(0, -12)
+      ctx.lineTo(3, -7)
+      ctx.lineTo(6, -12)
+      ctx.closePath()
+      ctx.fill()
+      ctx.beginPath()
+      ctx.ellipse(-3, -8, 2.2, 0.7, 0, 0, TAU)
+      ctx.ellipse(3, -8, 2.2, 0.7, 0, 0, TAU)
+      ctx.fill()
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)'
+      ctx.lineWidth = 1.4
+      ctx.beginPath()
+      ctx.arc(0, -8, 12, 0, TAU)
+      ctx.stroke()
+      ctx.fillStyle = '#fecaca'
+      ctx.font = 'bold 10px "PingFang SC", "Noto Sans SC", sans-serif'
+      ctx.fillText('已封印', 0, 50)
+    }
+
+    ctx.restore()
   }
 
   private drawFloatingDiamonds() {

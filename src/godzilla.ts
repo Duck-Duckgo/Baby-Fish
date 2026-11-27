@@ -36,6 +36,8 @@ export interface Godzilla {
   charges: number
   waves: WaveBlast[]
   spitCooldown: number
+  /** If drive started at max level, demote once on successful wave hit. */
+  demoteOnSuccess: boolean
 }
 
 export function createGodzilla(width: number, sandBase: number, scale: number): Godzilla {
@@ -60,6 +62,7 @@ export function createGodzilla(width: number, sandBase: number, scale: number): 
     charges: 1,
     waves: [],
     spitCooldown: 0,
+    demoteOnSuccess: false,
   }
 }
 
@@ -76,12 +79,21 @@ export function upgradeGodzilla(g: Godzilla): boolean {
   return true
 }
 
+/** −1 level and ÷1.2 size after a max-level successful drive. */
+export function demoteGodzilla(g: Godzilla): boolean {
+  if (g.level <= 1) return false
+  g.level -= 1
+  g.scale /= 1.2
+  return true
+}
+
 /**
  * Start a wave-spit drive-away. Closer contact finishes sooner.
- * Returns false if already driving / vanishing / out of charges.
+ * Consumes exactly one charge. Max-level drives demote on success.
  */
 export function startGodzillaDrive(g: Godzilla, hx: number, hy: number): boolean {
   if (g.phase === 'drive' || g.phase === 'vanish' || g.charges <= 0) return false
+  g.demoteOnSuccess = g.level >= GODZILLA_MAX_LEVEL
   g.charges -= 1
   g.phase = 'drive'
   const dist = Math.hypot(hx - g.x, hy - g.y)
