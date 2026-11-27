@@ -269,54 +269,52 @@ export function drawMonster(ctx: CanvasRenderingContext2D, m: Monster) {
   ctx.ellipse(-15, headY + 2, 5.5, 8, -0.15, 0, TAU)
   ctx.ellipse(15, headY + 2, 5.5, 8, 0.15, 0, TAU)
   ctx.fill()
-  // Sawtooth bangs (3 triangles)
-  ctx.beginPath()
-  ctx.moveTo(-11, headY - 6)
-  ctx.lineTo(-7, headY + 5)
-  ctx.lineTo(-3, headY - 6)
-  ctx.lineTo(0, headY + 6)
-  ctx.lineTo(3, headY - 6)
-  ctx.lineTo(7, headY + 5)
-  ctx.lineTo(11, headY - 6)
-  ctx.closePath()
-  ctx.fill()
+  // Sawtooth bangs — three short triangles on the forehead (above the eyes)
+  for (const tipX of [-7, 0, 7]) {
+    ctx.beginPath()
+    ctx.moveTo(tipX - 4.5, headY - 8)
+    ctx.lineTo(tipX, headY - 1.5)
+    ctx.lineTo(tipX + 4.5, headY - 8)
+    ctx.closePath()
+    ctx.fill()
+  }
 
-  // Thin arched brows above shadow
+  // Thin arched brows sitting above the fringe tips
   ctx.strokeStyle = '#111827'
   ctx.lineWidth = 1.4
   ctx.lineCap = 'round'
   ctx.beginPath()
-  ctx.moveTo(-9, headY - 7)
-  ctx.quadraticCurveTo(-5.5, headY - 10, -2, headY - 7.5)
-  ctx.moveTo(2, headY - 7.5)
-  ctx.quadraticCurveTo(5.5, headY - 10, 9, headY - 7)
+  ctx.moveTo(-9, headY - 9.5)
+  ctx.quadraticCurveTo(-5.5, headY - 12.5, -2, headY - 10)
+  ctx.moveTo(2, headY - 10)
+  ctx.quadraticCurveTo(5.5, headY - 12.5, 9, headY - 9.5)
   ctx.stroke()
 
-  // Squinting slit eyes + pupils
+  // Squinting slit eyes + inward pupils (scheming look)
   ctx.fillStyle = '#6b7280'
   ctx.beginPath()
-  ctx.ellipse(-5.5, headY - 1, 4.2, 1.35, 0, 0, TAU)
-  ctx.ellipse(5.5, headY - 1, 4.2, 1.35, 0, 0, TAU)
+  ctx.ellipse(-5.5, headY + 1.5, 4.4, 1.25, 0, 0, TAU)
+  ctx.ellipse(5.5, headY + 1.5, 4.4, 1.25, 0, 0, TAU)
   ctx.fill()
   ctx.fillStyle = '#111827'
   ctx.beginPath()
-  ctx.arc(-4.2, headY - 1, 1.15, 0, TAU)
-  ctx.arc(4.2, headY - 1, 1.15, 0, TAU)
+  ctx.arc(-4.0, headY + 1.5, 1.15, 0, TAU)
+  ctx.arc(4.0, headY + 1.5, 1.15, 0, TAU)
   ctx.fill()
 
   // Pink circular blush
   ctx.fillStyle = '#fb7185'
   ctx.beginPath()
-  ctx.arc(-9.5, headY + 5, 2.8, 0, TAU)
-  ctx.arc(9.5, headY + 5, 2.8, 0, TAU)
+  ctx.arc(-9.5, headY + 6.5, 2.8, 0, TAU)
+  ctx.arc(9.5, headY + 6.5, 2.8, 0, TAU)
   ctx.fill()
 
   // Mischievous half-moon grin
   ctx.fillStyle = '#7f1d1d'
   ctx.beginPath()
-  ctx.moveTo(-7, headY + 8)
-  ctx.quadraticCurveTo(0, headY + 16 + chew * 0.2, 7, headY + 8)
-  ctx.quadraticCurveTo(0, headY + 10, -7, headY + 8)
+  ctx.moveTo(-7.5, headY + 9.5)
+  ctx.quadraticCurveTo(0, headY + 17.5 + chew * 0.2, 7.5, headY + 9.5)
+  ctx.quadraticCurveTo(0, headY + 11.5, -7.5, headY + 9.5)
   ctx.closePath()
   ctx.fill()
   ctx.strokeStyle = '#111827'
