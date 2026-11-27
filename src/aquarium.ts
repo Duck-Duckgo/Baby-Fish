@@ -1,5 +1,12 @@
 import { SPECIES, type FishPose, type Species, type SwimStyle, type Zone } from './species.ts'
 import {
+  createMonster,
+  drawMonster,
+  monsterGone,
+  updateMonster,
+  type Monster,
+} from './monster.ts'
+import {
   createTown,
   drawTownBuildings,
   drawTownCharacters,
@@ -169,6 +176,7 @@ export class Aquarium {
   private bubbleTimer = 0
   private visitorTimer = rand(6, 11)
   private lastVisitor: VisitorKind | null = null
+  private monsterTimer = rand(16, 22)
   private labels = false
 
   private fish: Fish[] = []
@@ -176,6 +184,7 @@ export class Aquarium {
   private bubbles: Bubble[] = []
   private ripples: Ripple[] = []
   private visitors: Visitor[] = []
+  private monster: Monster | null = null
   private weeds: Weed[] = []
   private pebbles: Pebble[] = []
   private town: TownState = { buildings: [], characters: [] }
@@ -248,7 +257,9 @@ export class Aquarium {
     this.fish = []
     this.visitors = []
     this.pellets = []
+    this.monster = null
     this.visitorTimer = 1e9
+    this.monsterTimer = 1e9
     this.labels = true
     for (const species of SPECIES) this.addFish(false, species)
 
@@ -366,6 +377,7 @@ export class Aquarium {
     this.time += step
     this.updatePellets(step)
     this.updateVisitors(step)
+    this.updateMonster(step)
     updateTown(this.town, step, this.width, (x) => this.sandTop(x), this.time)
     if (this.labels) {
       for (const f of this.fish) f.tailPhase += step * TAU * f.species.tailHz * 0.45
@@ -395,6 +407,7 @@ export class Aquarium {
     const ordered = [...this.fish].sort((a, b) => this.depthOrder(a) - this.depthOrder(b))
     for (const f of ordered) this.drawFish(f)
     if (this.labels) this.drawLabels()
+    if (this.monster) drawMonster(ctx, this.monster)
 
     for (const weed of this.weeds) if (weed.front) this.drawWeed(weed)
     this.drawBubbles()
@@ -523,6 +536,38 @@ export class Aquarium {
     this.visitors = remaining
   }
 
+  private updateMonster(dt: number) {
+    if (!this.monster) {
+      this.monsterTimer -= dt
+      if (this.monsterTimer <= 0 && this.fish.length > 0) {
+        this.monster = createMonster(this.width, this.height, this.sandBase, this.fishScale)
+      }
+      return
+    }
+
+    updateMonster(
+      this.monster,
+      dt,
+      this.width,
+      this.sandBase,
+      this.fish,
+      (index) => {
+        if (index < 0 || index >= this.fish.length) return
+        const [gone] = this.fish.splice(index, 1)
+        // A few panic bubbles where the fish vanished.
+        for (let i = 0; i < 6; i++) {
+          this.emitBubble(gone.x + rand(-8, 8), gone.y + rand(-6, 6), rand(1.5, 3.5), rand(40, 70))
+        }
+        this.emitStats()
+      },
+    )
+
+    if (monsterGone(this.monster, this.width)) {
+      this.monster = null
+      this.monsterTimer = rand(18, 24)
+    }
+  }
+
   private updateFish(dt: number) {
     for (const f of this.fish) {
       const s = f.species
@@ -612,6 +657,20 @@ export class Aquarium {
         if (s.puffs) {
           f.puffTarget = 1
           f.puffTimer = Math.max(f.puffTimer, 2)
+        }
+      }
+
+      // Panic-flee the round-faced monster while she's hunting.
+      if (this.monster && (this.monster.phase === 'chase' || this.monster.phase === 'enter')) {
+        const rx = f.x - this.monster.x
+        const ry = f.y - this.monster.y
+        const reach = 110 * this.monster.scale + f.length
+        const d = Math.hypot(rx, ry)
+        if (d < reach && d > 0.001) {
+          const push = (1 - d / reach) * (food ? 140 : 420)
+          ax += (rx / d) * push
+          ay += (ry / d) * push
+          f.restTimer = 0
         }
       }
 
