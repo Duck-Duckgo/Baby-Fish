@@ -1,8 +1,10 @@
 import { SPECIES, type FishPose, type Species, type SwimStyle, type Zone } from './species.ts'
 import {
   createMonster,
+  drawKikiBanner,
   drawMonster,
   monsterGone,
+  playKikiAlert,
   updateMonster,
   type Monster,
 } from './monster.ts'
@@ -120,6 +122,19 @@ interface Pebble {
   color: string
 }
 
+type DecorKind = 'pearl' | 'shell' | 'coral' | 'star'
+
+interface SandDecor {
+  kind: DecorKind
+  x: number
+  y: number
+  scale: number
+  rot: number
+  color: string
+  accent: string
+  variant: number
+}
+
 export const MAX_FISH = 30
 
 const MAX_PELLETS = 80
@@ -187,6 +202,7 @@ export class Aquarium {
   private monster: Monster | null = null
   private weeds: Weed[] = []
   private pebbles: Pebble[] = []
+  private decors: SandDecor[] = []
   private town: TownState = { buildings: [], characters: [] }
 
   private waterFill: CanvasGradient | null = null
@@ -375,6 +391,7 @@ export class Aquarium {
     if (this.width === 0) return null
     this.monster = createMonster(this.width, this.height, this.sandBase, this.fishScale)
     this.monsterTimer = 1e9
+    playKikiAlert()
     return this.monster
   }
 
@@ -407,6 +424,7 @@ export class Aquarium {
     this.drawSurface()
     for (const weed of this.weeds) if (!weed.front) this.drawWeed(weed)
     this.drawSand()
+    this.drawDecors()
     drawTownBuildings(ctx, this.town, (x) => this.sandTop(x))
     drawTownCharacters(ctx, this.town)
     for (const v of this.visitors) drawVisitor(ctx, v)
@@ -415,7 +433,10 @@ export class Aquarium {
     const ordered = [...this.fish].sort((a, b) => this.depthOrder(a) - this.depthOrder(b))
     for (const f of ordered) this.drawFish(f)
     if (this.labels) this.drawLabels()
-    if (this.monster) drawMonster(ctx, this.monster)
+    if (this.monster) {
+      drawMonster(ctx, this.monster)
+      drawKikiBanner(ctx, width, this.monster)
+    }
 
     for (const weed of this.weeds) if (weed.front) this.drawWeed(weed)
     this.drawBubbles()
@@ -549,6 +570,7 @@ export class Aquarium {
       this.monsterTimer -= dt
       if (this.monsterTimer <= 0 && this.fish.length > 0) {
         this.monster = createMonster(this.width, this.height, this.sandBase, this.fishScale)
+        playKikiAlert()
       }
       return
     }
@@ -809,7 +831,45 @@ export class Aquarium {
       })
     }
 
+    this.layoutDecors(random)
     this.layoutTown()
+  }
+
+  private layoutDecors(random: () => number) {
+    const { width } = this
+    this.decors = []
+    if (width === 0) return
+
+    const coralColors = ['#f472b6', '#fb7185', '#f97316', '#a3e635', '#22d3ee', '#c084fc']
+    const shellColors = ['#fde68a', '#fecdd3', '#e7e5e4', '#fdba74', '#a5f3fc']
+    const pearlColors = ['#f8fafc', '#fce7f3', '#e0f2fe', '#fef9c3']
+    const count = Math.max(10, Math.round(width / 55))
+
+    for (let i = 0; i < count; i++) {
+      const kindRoll = random()
+      const kind: DecorKind =
+        kindRoll < 0.28 ? 'pearl' : kindRoll < 0.55 ? 'shell' : kindRoll < 0.82 ? 'coral' : 'star'
+      const x = 18 + random() * Math.max(20, width - 36)
+      const y = this.sandTop(x) - (kind === 'coral' ? 2 + random() * 4 : random() * 3)
+      const color =
+        kind === 'pearl'
+          ? pearlColors[Math.floor(random() * pearlColors.length)]
+          : kind === 'shell'
+            ? shellColors[Math.floor(random() * shellColors.length)]
+            : kind === 'coral'
+              ? coralColors[Math.floor(random() * coralColors.length)]
+              : '#f9a8d4'
+      this.decors.push({
+        kind,
+        x,
+        y,
+        scale: 0.7 + random() * 0.7,
+        rot: (random() - 0.5) * 0.7,
+        color,
+        accent: kind === 'pearl' ? '#ffffff' : kind === 'shell' ? '#fff7ed' : '#fda4af',
+        variant: Math.floor(random() * 3),
+      })
+    }
   }
 
   private layoutTown() {
@@ -909,6 +969,152 @@ export class Aquarium {
     ctx.ellipse(stoneX, this.sandTop(stoneX) - 2, 15, 6, 0, 0, TAU)
     ctx.fillStyle = '#5f7480'
     ctx.fill()
+  }
+
+  private drawDecors() {
+    const { ctx } = this
+    for (const d of this.decors) {
+      ctx.save()
+      ctx.translate(d.x, d.y)
+      ctx.rotate(d.rot)
+      ctx.scale(d.scale, d.scale)
+      if (d.kind === 'pearl') this.drawPearl(d)
+      else if (d.kind === 'shell') this.drawShell(d)
+      else if (d.kind === 'coral') this.drawCoral(d)
+      else this.drawSandStar(d)
+      ctx.restore()
+    }
+  }
+
+  private drawPearl(d: SandDecor) {
+    const { ctx } = this
+    const r = 4.5
+    const g = ctx.createRadialGradient(-1.5, -1.5, 0.5, 0, 0, r)
+    g.addColorStop(0, d.accent)
+    g.addColorStop(0.55, d.color)
+    g.addColorStop(1, '#94a3b8')
+    ctx.beginPath()
+    ctx.arc(0, 0, r, 0, TAU)
+    ctx.fillStyle = g
+    ctx.fill()
+    ctx.strokeStyle = 'rgba(100, 116, 139, 0.35)'
+    ctx.lineWidth = 0.8
+    ctx.stroke()
+  }
+
+  private drawShell(d: SandDecor) {
+    const { ctx } = this
+    ctx.fillStyle = d.color
+    ctx.beginPath()
+    if (d.variant === 0) {
+      // Fan clam
+      ctx.moveTo(0, 2)
+      for (let i = 0; i <= 8; i++) {
+        const a = -Math.PI + (i / 8) * Math.PI
+        const r = 7 + (i % 2 === 0 ? 1.5 : 0)
+        ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r * 0.7 + 1)
+      }
+      ctx.closePath()
+    } else if (d.variant === 1) {
+      // Spiral conch
+      ctx.ellipse(0, 0, 7, 5, 0, 0, TAU)
+    } else {
+      // Scallop
+      ctx.moveTo(-7, 2)
+      ctx.quadraticCurveTo(-8, -6, 0, -7)
+      ctx.quadraticCurveTo(8, -6, 7, 2)
+      ctx.quadraticCurveTo(0, 5, -7, 2)
+      ctx.closePath()
+    }
+    ctx.fill()
+    ctx.strokeStyle = 'rgba(120, 80, 40, 0.35)'
+    ctx.lineWidth = 0.9
+    ctx.stroke()
+    // Ridges
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)'
+    ctx.lineWidth = 0.7
+    for (const a of [-0.7, -0.25, 0.25, 0.7]) {
+      ctx.beginPath()
+      ctx.moveTo(0, 1)
+      ctx.lineTo(Math.sin(a) * 6, -Math.cos(a) * 5)
+      ctx.stroke()
+    }
+    ctx.fillStyle = d.accent
+    ctx.beginPath()
+    ctx.arc(0, 1.5, 1.4, 0, TAU)
+    ctx.fill()
+  }
+
+  private drawCoral(d: SandDecor) {
+    const { ctx } = this
+    ctx.strokeStyle = d.color
+    ctx.fillStyle = d.color
+    ctx.lineCap = 'round'
+    ctx.lineWidth = 2.4
+    const branches =
+      d.variant === 0
+        ? [
+            [0, 0, 0, -14],
+            [0, -6, -7, -12],
+            [0, -8, 7, -13],
+            [0, -11, -4, -18],
+            [0, -11, 5, -17],
+          ]
+        : d.variant === 1
+          ? [
+              [0, 0, -2, -12],
+              [-2, -6, -9, -10],
+              [-2, -8, 4, -14],
+              [4, -10, 8, -15],
+            ]
+          : [
+              [0, 0, 0, -10],
+              [0, -4, -8, -9],
+              [0, -5, 8, -9],
+              [-8, -9, -10, -14],
+              [8, -9, 11, -13],
+              [0, -8, 0, -16],
+            ]
+    for (const [x0, y0, x1, y1] of branches) {
+      ctx.beginPath()
+      ctx.moveTo(x0, y0)
+      ctx.lineTo(x1, y1)
+      ctx.stroke()
+      ctx.beginPath()
+      ctx.arc(x1, y1, 2.1, 0, TAU)
+      ctx.fill()
+    }
+    // Soft tips
+    ctx.fillStyle = d.accent
+    ctx.globalAlpha = 0.55
+    for (const [, , x1, y1] of branches) {
+      ctx.beginPath()
+      ctx.arc(x1, y1, 1.2, 0, TAU)
+      ctx.fill()
+    }
+    ctx.globalAlpha = 1
+  }
+
+  private drawSandStar(d: SandDecor) {
+    const { ctx } = this
+    const tips = 5
+    const outer = 7
+    const inner = 3.2
+    ctx.beginPath()
+    for (let i = 0; i < tips * 2; i++) {
+      const r = i % 2 === 0 ? outer : inner
+      const a = -Math.PI / 2 + (i * Math.PI) / tips
+      const x = Math.cos(a) * r
+      const y = Math.sin(a) * r
+      if (i === 0) ctx.moveTo(x, y)
+      else ctx.lineTo(x, y)
+    }
+    ctx.closePath()
+    ctx.fillStyle = d.color
+    ctx.fill()
+    ctx.strokeStyle = 'rgba(157, 23, 77, 0.35)'
+    ctx.lineWidth = 0.8
+    ctx.stroke()
   }
 
   private drawPellets() {
