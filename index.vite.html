@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="description" content="一个可以互动的小鱼缸：25 种外形各异的鱼，点一下水面撒鱼食，还会有潜水艇和潜水员路过。" />
+    <meta name="theme-color" content="#1a8db0" />
+    <title>小鱼缸</title>
+  </head>
+  <body>
+    <main class="tank">
+      <canvas
+        id="tank"
+        role="img"
+        aria-label="一个动画鱼缸：25 种外形各异的鱼在水草和气泡之间游动，时不时有潜水艇或潜水员横穿鱼缸。点击水里任意位置可以撒鱼食。"
+      ></canvas>
+
+      <section class="panel" aria-labelledby="title">
+        <p class="eyebrow">互动小网页</p>
+        <h1 id="title">小鱼缸</h1>
+        <p class="lead">点一下水里任意位置撒鱼食，小鱼会游过来吃。缸里有 25 种鱼，偶尔还有潜水艇和潜水员路过。</p>
+
+        <dl class="stats">
+          <div>
+            <dt>小鱼</dt>
+            <dd><span id="fish-count">0</span><small>条</small></dd>
+          </div>
+          <div>
+            <dt>种类</dt>
+            <dd><span id="species-count">0</span><small>种</small></dd>
+          </div>
+          <div>
+            <dt>鱼食</dt>
+            <dd><span id="eaten-count">0</span><small>粒</small></dd>
+          </div>
+        </dl>
+
+        <div class="actions">
+          <button id="add-fish" class="btn btn-primary" type="button">放一条鱼</button>
+          <button id="feed" class="btn btn-secondary" type="button">撒一把鱼食</button>
+          <button id="pause" class="btn btn-ghost" type="button" aria-pressed="false">暂停</button>
+        </div>
+
+        <p id="status" class="status" role="status" aria-live="polite"></p>
+        <noscript><p class="status">需要开启 JavaScript 才能看到小鱼游动。</p></noscript>
+      </section>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

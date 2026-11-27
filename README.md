@@ -22,7 +22,7 @@ npm run build     # 类型检查，并把静态文件输出到 dist/
 npm run preview   # 在本地预览构建结果
 ```
 
-`dist/` 里是纯静态文件，可以直接部署到任何静态托管服务。
+`dist/` 里是纯静态文件。`npm run build` 还会把构建结果同步到仓库根目录（`index.html`、`assets/`、`CNAME`），以便 GitHub Pages 从 `main` 根路径发布到自定义域名 [dirtykiki.com](https://dirtykiki.com)。本地开发入口是 `index.vite.html`。
 
 ## 目录结构
 
