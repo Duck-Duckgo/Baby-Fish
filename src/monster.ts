@@ -48,6 +48,18 @@ export function monsterGone(m: Monster, width: number): boolean {
   return m.phase === 'leave' && (m.x < -60 || m.x > width + 60)
 }
 
+/** Force the hunter to flee (e.g. after a guardian wave hit). */
+export function driveMonsterAway(m: Monster, fromX: number, width: number) {
+  m.eaten = false
+  m.phase = 'leave'
+  m.facing = m.x < fromX ? -1 : 1
+  if (m.x < width * 0.15) m.facing = -1
+  if (m.x > width * 0.85) m.facing = 1
+  m.vx = m.facing * 140
+  m.vy = 0
+  m.alertLeft = 0
+}
+
 /** Pick a fish index to hunt, preferring mid-sized swimmers. */
 export function pickMonsterTarget(count: number): number | null {
   if (count <= 0) return null

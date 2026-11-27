@@ -3,6 +3,7 @@ import {
   createMonster,
   drawKikiBanner,
   drawMonster,
+  driveMonsterAway,
   monsterGone,
   playKikiAlert,
   updateMonster,
@@ -11,8 +12,9 @@ import {
 import {
   createGodzilla,
   drawGodzilla,
+  GODZILLA_MAX_LEVEL,
   godzillaGone,
-  startGodzillaFight,
+  startGodzillaDrive,
   updateGodzilla,
   upgradeGodzilla,
   type Godzilla,
@@ -49,6 +51,8 @@ export interface AquariumStats {
   hasGodzilla: boolean
   godzillaLevel: number
   godzillaCharges: number
+  godzillaMaxed: boolean
+  foodUpgraded: boolean
 }
 
 export interface AquariumOptions {
@@ -58,9 +62,12 @@ export interface AquariumOptions {
 
 /** Cost to summon or upgrade the kaiju guardian. */
 export const GODZILLA_COST = 10
+/** Cost to unlock burger fish food. */
+export const FOOD_UPGRADE_COST = 20
 /** Seconds between diamond drops from a fully grown fish. */
 export const DIAMOND_INTERVAL = 5
 const MAX_FLOATING_DIAMONDS = 36
+const SPRINKLE_COUNT = 5
 
 interface Fish {
   species: Species
@@ -120,6 +127,10 @@ interface Pellet {
   phase: number
   landed: boolean
   restTime: number
+  kind: 'pellet' | 'burger'
+  /** How many meal units this food is worth (burger = 5). */
+  mealValue: number
+  radius: number
 }
 
 interface Bubble {
@@ -236,6 +247,7 @@ export class Aquarium {
   private godzilla: Godzilla | null = null
   private diamondsHeld = 0
   private floatingDiamonds: FloatingDiamond[] = []
+  private foodUpgraded = false
   private weeds: Weed[] = []
   private pebbles: Pebble[] = []
   private decors: SandDecor[] = []
@@ -279,6 +291,14 @@ export class Aquarium {
 
   get godzillaCharges() {
     return this.godzilla?.charges ?? 0
+  }
+
+  get godzillaMaxed() {
+    return this.godzillaLevel >= GODZILLA_MAX_LEVEL
+  }
+
+  get hasFoodUpgrade() {
+    return this.foodUpgraded
   }
 
   resize(width: number, height: number) {
@@ -407,18 +427,23 @@ export class Aquarium {
     return kind
   }
 
-  sprinkle(x: number, y: number, count = 6) {
+  sprinkle(x: number, y: number, count = SPRINKLE_COUNT) {
     if (this.width === 0) return
 
     const startY = clamp(y, 10, this.sandTop(x) - 12)
+    const burger = this.foodUpgraded
+    const spread = burger ? 22 : 14
     for (let i = 0; i < count; i++) {
       this.pellets.push({
-        x: clamp(x + rand(-14, 14), 6, this.width - 6),
+        x: clamp(x + rand(-spread, spread), 6, this.width - 6),
         y: startY + rand(-6, 6),
         vy: rand(22, 36),
         phase: rand(0, TAU),
         landed: false,
         restTime: 0,
+        kind: burger ? 'burger' : 'pellet',
+        mealValue: burger ? 5 : 1,
+        radius: burger ? 5.6 : 2.8,
       })
     }
     if (this.pellets.length > MAX_PELLETS) {
@@ -428,7 +453,7 @@ export class Aquarium {
   }
 
   sprinkleSomewhere() {
-    this.sprinkle(rand(this.width * 0.3, this.width * 0.85), rand(24, 60), 8)
+    this.sprinkle(rand(this.width * 0.3, this.width * 0.85), rand(24, 60), SPRINKLE_COUNT)
   }
 
   /** Sends a submarine or diver across the tank right away. */
@@ -460,11 +485,27 @@ export class Aquarium {
     return true
   }
 
-  /** While a guardian is present, spend diamonds to level up looks + one extra intercept. */
+  /** While a guardian is present, spend diamonds to level up looks + one extra drive. */
   upgradeGodzilla(): boolean {
-    if (!this.godzilla || this.godzilla.phase === 'vanish' || this.diamondsHeld < GODZILLA_COST) return false
+    if (
+      !this.godzilla ||
+      this.godzilla.phase === 'vanish' ||
+      this.godzilla.level >= GODZILLA_MAX_LEVEL ||
+      this.diamondsHeld < GODZILLA_COST
+    ) {
+      return false
+    }
     this.diamondsHeld -= GODZILLA_COST
     upgradeGodzilla(this.godzilla)
+    this.emitStats()
+    return true
+  }
+
+  /** Unlock burger fish food (5× meal value, 2× size) for FOOD_UPGRADE_COST diamonds. */
+  buyFoodUpgrade(): boolean {
+    if (this.foodUpgraded || this.diamondsHeld < FOOD_UPGRADE_COST) return false
+    this.diamondsHeld -= FOOD_UPGRADE_COST
+    this.foodUpgraded = true
     this.emitStats()
     return true
   }
@@ -491,14 +532,17 @@ export class Aquarium {
     for (let i = 0; i < count; i++) this.spawnDiamondNear(pool[i % pool.length])
   }
 
-  /** Seed diamonds, upgraded guardian, and hunter for screenshots (`?demo`). */
+  /** Seed diamonds, upgraded guardian, burgers, and hunter for screenshots (`?demo`). */
   seedDemo() {
     this.maxGrowAll()
-    this.grantDiamonds(GODZILLA_COST * 4)
-    this.burstDiamonds(10)
+    this.grantDiamonds(GODZILLA_COST * 12 + FOOD_UPGRADE_COST)
+    this.burstDiamonds(8)
     this.buyGodzilla()
-    this.upgradeGodzilla()
-    this.upgradeGodzilla()
+    while (this.godzilla && this.godzilla.level < GODZILLA_MAX_LEVEL) {
+      if (!this.upgradeGodzilla()) break
+    }
+    this.buyFoodUpgrade()
+    this.sprinkle(this.width * 0.55, this.height * 0.35, SPRINKLE_COUNT)
     this.spawnMonsterNow()
   }
 
@@ -694,17 +738,14 @@ export class Aquarium {
       this.fish,
       (index) => {
         if (index < 0 || index >= this.fish.length) return false
-        // Guardian cancels this catch (spends one charge; leaves only when charges hit 0).
-        if (this.godzilla && this.godzilla.phase !== 'vanish' && this.godzilla.phase !== 'fight') {
-          startGodzillaFight(this.godzilla, this.monster!.x, this.monster!.y)
-          for (let i = 0; i < 10; i++) {
-            this.emitBubble(
-              this.monster!.x + rand(-16, 16),
-              this.monster!.y + rand(-12, 12),
-              rand(2, 5),
-              rand(40, 90),
-            )
-          }
+        // Last-resort drive if somehow still hunting next to the guardian.
+        if (
+          this.godzilla &&
+          this.godzilla.phase !== 'vanish' &&
+          this.godzilla.phase !== 'drive' &&
+          this.godzilla.charges > 0
+        ) {
+          startGodzillaDrive(this.godzilla, this.monster!.x, this.monster!.y)
           this.emitStats()
           return false
         }
@@ -725,19 +766,31 @@ export class Aquarium {
 
   private updateGodzilla(dt: number) {
     if (!this.godzilla) return
-    updateGodzilla(
-      this.godzilla,
-      dt,
-      this.width,
-      this.sandBase,
+    const prevCharges = this.godzilla.charges
+    const prevPhase = this.godzilla.phase
+    const hunter =
       this.monster && (this.monster.phase === 'enter' || this.monster.phase === 'chase')
         ? this.monster
-        : null,
-    )
+        : null
+    updateGodzilla(this.godzilla, dt, this.width, this.sandBase, hunter, () => {
+      if (!this.monster || !this.godzilla) return
+      if (this.monster.phase === 'leave') return
+      driveMonsterAway(this.monster, this.godzilla.x, this.width)
+      for (let i = 0; i < 8; i++) {
+        this.emitBubble(
+          this.monster.x + rand(-14, 14),
+          this.monster.y + rand(-10, 10),
+          rand(2, 4.5),
+          rand(50, 100),
+        )
+      }
+    })
     if (godzillaGone(this.godzilla)) {
       this.godzilla = null
       this.emitStats()
+      return
     }
+    if (this.godzilla.charges !== prevCharges || this.godzilla.phase !== prevPhase) this.emitStats()
   }
 
   private updateFloatingDiamonds(dt: number) {
@@ -825,6 +878,9 @@ export class Aquarium {
         pace *= 1 - f.puff * 0.5
       }
 
+      // Bigger fish swim proportionally slower so small ones can contest food.
+      const sizeSlow = f.birthLength / Math.max(f.birthLength, f.length)
+
       let targetX = f.x
       let targetY = f.y
       let speed = 0
@@ -836,7 +892,7 @@ export class Aquarium {
         if (Math.abs(ahead) > mouthX * f.length * 0.5) f.facing = Math.sign(ahead)
         targetX = food.x - f.facing * mouthX * f.length
         targetY = clamp(food.y - mouthY * f.length, bounds.top, this.sandTop(food.x) - belly * 0.6)
-        speed = f.cruise * 2.1 * Math.max(pace, 0.6)
+        speed = f.cruise * 2.1 * Math.max(pace, 0.6) * sizeSlow
       } else if (f.restTimer > 0) {
         f.restTimer -= dt
       } else {
@@ -849,7 +905,7 @@ export class Aquarium {
         }
         targetX = f.targetX
         targetY = f.targetY
-        speed = f.cruise * pace
+        speed = f.cruise * pace * sizeSlow
       }
 
       const dx = targetX - f.x
@@ -908,7 +964,7 @@ export class Aquarium {
       f.vx += ax * dt
       f.vy += ay * dt
 
-      const maxSpeed = f.cruise * (food ? 2.4 : 1.4 * Math.max(pace, 0.5))
+      const maxSpeed = f.cruise * (food ? 2.4 : 1.4 * Math.max(pace, 0.5)) * sizeSlow
       const currentSpeed = Math.hypot(f.vx, f.vy)
       if (currentSpeed > maxSpeed) {
         f.vx = (f.vx / currentSpeed) * maxSpeed
@@ -939,7 +995,8 @@ export class Aquarium {
       if (food) {
         const mouthX = f.x + f.facing * s.mouth[0] * f.length
         const mouthY = f.y + s.mouth[1] * f.length
-        if (Math.hypot(food.x - mouthX, food.y - mouthY) < f.length * 0.12 + 7) this.eat(f, food, mouthX, mouthY)
+        const bite = f.length * 0.12 + 7 + food.radius
+        if (Math.hypot(food.x - mouthX, food.y - mouthY) < bite) this.eat(f, food, mouthX, mouthY)
       }
 
       // Fully grown fish mint a floating diamond every DIAMOND_INTERVAL seconds.
@@ -957,14 +1014,17 @@ export class Aquarium {
     const index = this.pellets.indexOf(food)
     if (index !== -1) this.pellets.splice(index, 1)
 
-    this.eaten += 1
-    f.meals += 1
-    // Every MEALS_PER_GROWTH pellets this fish eats, grow +5% (capped at 3× birth size).
-    if (f.meals % MEALS_PER_GROWTH === 0) {
+    this.eaten += food.mealValue
+    const before = Math.floor(f.meals / MEALS_PER_GROWTH)
+    f.meals += food.mealValue
+    const after = Math.floor(f.meals / MEALS_PER_GROWTH)
+    // Every MEALS_PER_GROWTH meal units, grow +5% (capped at 3× birth size).
+    for (let i = 0; i < after - before; i++) {
       f.length = Math.min(f.maxLength, f.length * GROWTH_STEP)
     }
-    for (let i = 0; i < 3; i++) {
-      this.emitBubble(mouthX + rand(-3, 3), mouthY - rand(0, 4), rand(1.2, 2.4), rand(30, 55))
+    const bubbles = food.kind === 'burger' ? 6 : 3
+    for (let i = 0; i < bubbles; i++) {
+      this.emitBubble(mouthX + rand(-3, 3), mouthY - rand(0, 4), rand(1.2, 2.8), rand(30, 55))
     }
     this.emitStats()
   }
@@ -1010,6 +1070,8 @@ export class Aquarium {
       hasGodzilla: this.hasGodzilla,
       godzillaLevel: this.godzillaLevel,
       godzillaCharges: this.godzillaCharges,
+      godzillaMaxed: this.godzillaMaxed,
+      foodUpgraded: this.foodUpgraded,
     })
   }
 
@@ -1405,16 +1467,56 @@ export class Aquarium {
     const { ctx } = this
     for (const p of this.pellets) {
       ctx.globalAlpha = p.landed ? Math.max(0, 1 - p.restTime / PELLET_REST_SECONDS) : 1
-      ctx.beginPath()
-      ctx.arc(p.x, p.y, 2.8, 0, TAU)
-      ctx.fillStyle = '#b8642d'
-      ctx.fill()
-      ctx.beginPath()
-      ctx.arc(p.x - 0.8, p.y - 0.8, 1, 0, TAU)
-      ctx.fillStyle = 'rgba(255, 222, 184, 0.85)'
-      ctx.fill()
+      if (p.kind === 'burger') this.drawBurger(p)
+      else {
+        ctx.beginPath()
+        ctx.arc(p.x, p.y, p.radius, 0, TAU)
+        ctx.fillStyle = '#b8642d'
+        ctx.fill()
+        ctx.beginPath()
+        ctx.arc(p.x - 0.8, p.y - 0.8, 1, 0, TAU)
+        ctx.fillStyle = 'rgba(255, 222, 184, 0.85)'
+        ctx.fill()
+      }
     }
     ctx.globalAlpha = 1
+  }
+
+  private drawBurger(p: Pellet) {
+    const { ctx } = this
+    const s = p.radius
+    // Bottom bun
+    ctx.fillStyle = '#e8a54b'
+    ctx.beginPath()
+    ctx.ellipse(p.x, p.y + s * 0.35, s * 1.05, s * 0.45, 0, 0, TAU)
+    ctx.fill()
+    // Patty
+    ctx.fillStyle = '#6b3a1e'
+    ctx.beginPath()
+    ctx.ellipse(p.x, p.y + s * 0.05, s * 1.0, s * 0.32, 0, 0, TAU)
+    ctx.fill()
+    // Lettuce
+    ctx.fillStyle = '#6dbf4c'
+    ctx.beginPath()
+    ctx.ellipse(p.x, p.y - s * 0.12, s * 0.95, s * 0.22, 0, 0, TAU)
+    ctx.fill()
+    // Top bun
+    ctx.fillStyle = '#f0b85a'
+    ctx.beginPath()
+    ctx.ellipse(p.x, p.y - s * 0.35, s * 1.05, s * 0.55, 0, Math.PI, TAU)
+    ctx.ellipse(p.x, p.y - s * 0.15, s * 1.05, s * 0.28, 0, 0, TAU)
+    ctx.fill()
+    // Sesame
+    ctx.fillStyle = '#fff4d6'
+    for (const [dx, dy] of [
+      [-0.35, -0.45],
+      [0.1, -0.55],
+      [0.4, -0.35],
+    ] as const) {
+      ctx.beginPath()
+      ctx.ellipse(p.x + dx * s, p.y + dy * s, s * 0.12, s * 0.08, 0.3, 0, TAU)
+      ctx.fill()
+    }
   }
 
   private drawLabels() {

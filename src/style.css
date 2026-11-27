@@ -155,6 +155,25 @@ body {
   background: var(--kaiju-hover);
 }
 
+.btn-food {
+  background: #f0b85a;
+  color: #4a2a08;
+  width: 100%;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(74, 42, 8, 0.28);
+}
+
+.btn-food:hover:not(:disabled) {
+  background: #f6c978;
+}
+
+.btn-food.is-owned {
+  background: rgba(255, 244, 214, 0.2);
+  color: rgba(255, 244, 214, 0.92);
+  box-shadow: none;
+  cursor: default;
+}
+
 @media (max-width: 560px) {
   .controls {
     top: auto;

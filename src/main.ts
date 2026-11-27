@@ -1,18 +1,20 @@
 import './style.css'
-import { Aquarium, GODZILLA_COST } from './aquarium.ts'
+import { Aquarium, FOOD_UPGRADE_COST, GODZILLA_COST } from './aquarium.ts'
 
 function start() {
   const canvas = document.querySelector<HTMLCanvasElement>('#tank')
   const addButton = document.querySelector<HTMLButtonElement>('#add-fish')
   const diamondCount = document.querySelector<HTMLElement>('#diamond-count')
   const kaijuAction = document.querySelector<HTMLButtonElement>('#kaiju-action')
+  const foodUpgrade = document.querySelector<HTMLButtonElement>('#food-upgrade')
   const godzillaStatus = document.querySelector<HTMLElement>('#godzilla-status')
-  if (!canvas || !addButton || !diamondCount || !kaijuAction || !godzillaStatus) return
+  if (!canvas || !addButton || !diamondCount || !kaijuAction || !foodUpgrade || !godzillaStatus) return
 
   const ctx = canvas.getContext('2d')
   if (!ctx) {
     addButton.disabled = true
     kaijuAction.disabled = true
+    foodUpgrade.disabled = true
     return
   }
 
@@ -21,17 +23,34 @@ function start() {
     hasGodzilla: boolean
     godzillaLevel: number
     godzillaCharges: number
+    godzillaMaxed: boolean
+    foodUpgraded: boolean
   }) => {
     diamondCount.textContent = String(stats.diamonds)
     if (stats.hasGodzilla) {
       godzillaStatus.hidden = false
-      godzillaStatus.textContent = `Lv.${stats.godzillaLevel} · 可挡 ${stats.godzillaCharges} 次`
-      kaijuAction.textContent = `升级哥斯拉 · ${GODZILLA_COST}`
-      kaijuAction.disabled = stats.diamonds < GODZILLA_COST
+      godzillaStatus.textContent = `Lv.${stats.godzillaLevel} · 可驱赶 ${stats.godzillaCharges} 次`
+      if (stats.godzillaMaxed) {
+        kaijuAction.textContent = '哥斯拉已满级'
+        kaijuAction.disabled = true
+      } else {
+        kaijuAction.textContent = `升级哥斯拉 · ${GODZILLA_COST}`
+        kaijuAction.disabled = stats.diamonds < GODZILLA_COST
+      }
     } else {
       godzillaStatus.hidden = true
       kaijuAction.textContent = `购买哥斯拉 · ${GODZILLA_COST}`
       kaijuAction.disabled = stats.diamonds < GODZILLA_COST
+    }
+
+    if (stats.foodUpgraded) {
+      foodUpgrade.textContent = '汉堡鱼食已启用'
+      foodUpgrade.disabled = true
+      foodUpgrade.classList.add('is-owned')
+    } else {
+      foodUpgrade.textContent = `升级鱼食 · ${FOOD_UPGRADE_COST}`
+      foodUpgrade.disabled = stats.diamonds < FOOD_UPGRADE_COST
+      foodUpgrade.classList.remove('is-owned')
     }
   }
 
@@ -43,6 +62,8 @@ function start() {
         hasGodzilla: stats.hasGodzilla,
         godzillaLevel: stats.godzillaLevel,
         godzillaCharges: stats.godzillaCharges,
+        godzillaMaxed: stats.godzillaMaxed,
+        foodUpgraded: stats.foodUpgraded,
       }),
   })
 
@@ -50,7 +71,6 @@ function start() {
   let lastFrame = performance.now()
 
   const frame = (now: number) => {
-    // Clamp the step so a long-hidden tab doesn't teleport every fish on return.
     const dt = Math.min((now - lastFrame) / 1000, 1 / 20)
     lastFrame = now
     aquarium.update(dt)
@@ -77,6 +97,8 @@ function start() {
     hasGodzilla: aquarium.hasGodzilla,
     godzillaLevel: aquarium.godzillaLevel,
     godzillaCharges: aquarium.godzillaCharges,
+    godzillaMaxed: aquarium.godzillaMaxed,
+    foodUpgraded: aquarium.hasFoodUpgrade,
   })
 
   const params = new URLSearchParams(location.search)
@@ -106,6 +128,8 @@ function start() {
         hasGodzilla: aquarium.hasGodzilla,
         godzillaLevel: aquarium.godzillaLevel,
         godzillaCharges: aquarium.godzillaCharges,
+        godzillaMaxed: aquarium.godzillaMaxed,
+        foodUpgraded: aquarium.hasFoodUpgrade,
       })
     })
   }
@@ -122,6 +146,10 @@ function start() {
   kaijuAction.addEventListener('click', () => {
     if (aquarium.hasGodzilla) aquarium.upgradeGodzilla()
     else aquarium.buyGodzilla()
+  })
+
+  foodUpgrade.addEventListener('click', () => {
+    aquarium.buyFoodUpgrade()
   })
 
   frameId = requestAnimationFrame(frame)

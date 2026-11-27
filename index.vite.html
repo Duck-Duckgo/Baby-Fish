@@ -13,7 +13,7 @@
       <canvas
         id="tank"
         role="img"
-        aria-label="一个动画鱼缸：最多 100 条鱼在水草和气泡之间游动。点击水面撒鱼食；满级鱼会自动产出钻石。可用钻石购买并升级哥斯拉抵挡坏KiKi。"
+        aria-label="一个动画鱼缸：最多 100 条鱼在水草和气泡之间游动。点击水面撒鱼食；满级鱼会自动产出钻石。可用钻石购买并升级哥斯拉驱赶坏KiKi，也可升级汉堡鱼食。"
       ></canvas>
 
       <div class="controls">
@@ -25,9 +25,12 @@
           <span class="gem" aria-hidden="true"></span>
           <span id="diamond-count">0</span>
         </div>
-        <p id="godzilla-status" class="godzilla-status" hidden>Lv.1 · 可挡 1 次</p>
+        <p id="godzilla-status" class="godzilla-status" hidden>Lv.1 · 可驱赶 1 次</p>
         <button id="kaiju-action" class="btn btn-kaiju" type="button" disabled>
           购买哥斯拉 · 10
+        </button>
+        <button id="food-upgrade" class="btn btn-food" type="button" disabled>
+          升级鱼食 · 20
         </button>
       </aside>
     </main>
