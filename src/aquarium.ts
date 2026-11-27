@@ -1,5 +1,12 @@
 import { SPECIES, type FishPose, type Species, type SwimStyle, type Zone } from './species.ts'
 import {
+  createTown,
+  drawTownBuildings,
+  drawTownCharacters,
+  updateTown,
+  type TownState,
+} from './town.ts'
+import {
   createVisitor,
   drawVisitor,
   updateVisitor,
@@ -8,6 +15,13 @@ import {
   type Visitor,
   type VisitorKind,
 } from './visitors.ts'
+
+/** Pellets one fish must eat before the next +5% length bump. */
+export const MEALS_PER_GROWTH = 10
+/** Length multiplier applied on each growth bump. */
+export const GROWTH_STEP = 1.05
+/** Cap relative to the fish's birth length. */
+export const MAX_GROWTH_FACTOR = 3
 
 export interface AquariumStats {
   fish: number
@@ -26,8 +40,13 @@ interface Fish {
   y: number
   vx: number
   vy: number
+  /** Current body length used for drawing and physics. */
   length: number
+  /** Length at birth; growth is capped at birthLength * MAX_GROWTH_FACTOR. */
+  birthLength: number
   maxLength: number
+  /** Pellets this individual has eaten (drives per-fish growth). */
+  meals: number
   cruise: number
   tailPhase: number
   facing: number
@@ -159,6 +178,7 @@ export class Aquarium {
   private visitors: Visitor[] = []
   private weeds: Weed[] = []
   private pebbles: Pebble[] = []
+  private town: TownState = { buildings: [], characters: [] }
 
   private waterFill: CanvasGradient | null = null
   private sandFill: CanvasGradient | null = null
@@ -215,6 +235,7 @@ export class Aquarium {
       p.y = Math.min(p.y, this.sandTop(p.x) - 2)
     }
     for (const v of this.visitors) v.baseY = clamp(v.baseY, 30, Math.max(30, this.sandBase - 40))
+    this.layoutTown()
   }
 
   /** Adds up to `count` fish, each of a different species, spread around the tank. */
@@ -239,7 +260,9 @@ export class Aquarium {
       const f = this.fish[i]
       const fit = Math.min(colW * 0.78, rowH * 0.72)
       f.length = fit / Math.max(1, f.species.halfHeight * 2)
-      f.maxLength = f.length
+      f.birthLength = f.length
+      f.maxLength = f.birthLength * MAX_GROWTH_FACTOR
+      f.meals = 0
       f.x = colW * ((i % cols) + 0.5)
       f.y = 20 + rowH * (Math.floor(i / cols) + 0.5)
       f.vx = 0
@@ -271,7 +294,9 @@ export class Aquarium {
       vx: direction * cruise,
       vy: 0,
       length,
-      maxLength: length * 1.3,
+      birthLength: length,
+      maxLength: length * MAX_GROWTH_FACTOR,
+      meals: 0,
       cruise,
       tailPhase: rand(0, TAU),
       facing: direction,
@@ -341,6 +366,7 @@ export class Aquarium {
     this.time += step
     this.updatePellets(step)
     this.updateVisitors(step)
+    updateTown(this.town, step, this.width, (x) => this.sandTop(x), this.time)
     if (this.labels) {
       for (const f of this.fish) f.tailPhase += step * TAU * f.species.tailHz * 0.45
     } else {
@@ -361,6 +387,8 @@ export class Aquarium {
     this.drawSurface()
     for (const weed of this.weeds) if (!weed.front) this.drawWeed(weed)
     this.drawSand()
+    drawTownBuildings(ctx, this.town, (x) => this.sandTop(x))
+    drawTownCharacters(ctx, this.town)
     for (const v of this.visitors) drawVisitor(ctx, v)
     this.drawPellets()
 
@@ -382,7 +410,8 @@ export class Aquarium {
   }
 
   private get stoneX() {
-    return this.width * 0.84
+    // Sit between the pineapple house and crab stand so the bubble rock isn't buried.
+    return this.width * 0.5
   }
 
   private get fishScale() {
@@ -630,7 +659,11 @@ export class Aquarium {
     if (index !== -1) this.pellets.splice(index, 1)
 
     this.eaten += 1
-    f.length = Math.min(f.maxLength, f.length + Math.max(0.7, f.length * 0.015))
+    f.meals += 1
+    // Every MEALS_PER_GROWTH pellets this fish eats, grow +5% (capped at 3× birth size).
+    if (f.meals % MEALS_PER_GROWTH === 0) {
+      f.length = Math.min(f.maxLength, f.length * GROWTH_STEP)
+    }
     for (let i = 0; i < 3; i++) {
       this.emitBubble(mouthX + rand(-3, 3), mouthY - rand(0, 4), rand(1.2, 2.4), rand(30, 55))
     }
@@ -708,6 +741,16 @@ export class Aquarium {
         color: PEBBLE_COLORS[Math.floor(random() * PEBBLE_COLORS.length)],
       })
     }
+
+    this.layoutTown()
+  }
+
+  private layoutTown() {
+    if (this.width === 0) {
+      this.town = { buildings: [], characters: [] }
+      return
+    }
+    this.town = createTown(this.width, (x) => this.sandTop(x), this.fishScale)
   }
 
   private drawRays() {
