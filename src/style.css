@@ -3,6 +3,11 @@
   --accent: #ffb547;
   --accent-hover: #ffc56e;
   --accent-ink: #3b2300;
+  --panel: rgba(8, 36, 56, 0.72);
+  --panel-border: rgba(186, 230, 253, 0.28);
+  --kaiju: #6dcf63;
+  --kaiju-hover: #86ef7a;
+  --kaiju-ink: #143216;
 
   font-family:
     'PingFang SC', 'Hiragino Sans GB', 'Noto Sans SC', 'Microsoft YaHei', system-ui, -apple-system,
@@ -45,6 +50,46 @@ body {
   z-index: 2;
 }
 
+.resources {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  min-width: 148px;
+  padding: 12px;
+  border-radius: 16px;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 12px 32px rgba(2, 20, 34, 0.32);
+  color: var(--ink);
+}
+
+.diamond-bank {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.gem {
+  width: 16px;
+  height: 20px;
+  display: inline-block;
+  background: linear-gradient(145deg, #e0f2fe 10%, #38bdf8 45%, #0369a1 100%);
+  clip-path: polygon(50% 0%, 100% 28%, 78% 100%, 22% 100%, 0% 28%);
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.45);
+  flex: 0 0 auto;
+}
+
 .btn {
   appearance: none;
   padding: 10px 16px;
@@ -57,7 +102,8 @@ body {
   cursor: pointer;
   transition:
     transform 0.15s ease,
-    background-color 0.15s ease;
+    background-color 0.15s ease,
+    opacity 0.15s ease;
   box-shadow: 0 10px 28px rgba(2, 20, 34, 0.28);
 }
 
@@ -71,7 +117,7 @@ body {
 }
 
 .btn:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: not-allowed;
 }
 
@@ -84,11 +130,36 @@ body {
   background: var(--accent-hover);
 }
 
+.btn-kaiju {
+  background: var(--kaiju);
+  color: var(--kaiju-ink);
+  width: 100%;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(20, 50, 22, 0.35);
+}
+
+.btn-kaiju:hover:not(:disabled) {
+  background: var(--kaiju-hover);
+}
+
 @media (max-width: 560px) {
   .controls {
     top: auto;
     left: 16px;
     bottom: calc(16px + env(safe-area-inset-bottom));
+  }
+
+  .resources {
+    top: 12px;
+    right: 12px;
+    min-width: 132px;
+    padding: 10px;
+    gap: 8px;
+  }
+
+  .btn-kaiju {
+    font-size: 13px;
+    padding: 9px 12px;
   }
 }
 

@@ -9,6 +9,14 @@ import {
   type Monster,
 } from './monster.ts'
 import {
+  createGodzilla,
+  drawGodzilla,
+  godzillaGone,
+  startGodzillaFight,
+  updateGodzilla,
+  type Godzilla,
+} from './godzilla.ts'
+import {
   createTown,
   drawTownBuildings,
   drawTownCharacters,
@@ -36,12 +44,20 @@ export interface AquariumStats {
   fish: number
   species: number
   eaten: number
+  diamonds: number
+  hasGodzilla: boolean
 }
 
 export interface AquariumOptions {
   reducedMotion: boolean
   onStatsChange?: (stats: AquariumStats) => void
 }
+
+/** Cost to summon the kaiju guardian. */
+export const GODZILLA_COST = 10
+/** Seconds between diamond drops from a fully grown fish. */
+export const DIAMOND_INTERVAL = 5
+const MAX_FLOATING_DIAMONDS = 24
 
 interface Fish {
   species: Species
@@ -56,6 +72,8 @@ interface Fish {
   maxLength: number
   /** Pellets this individual has eaten (drives per-fish growth). */
   meals: number
+  /** Countdown to next diamond drop once at max growth. */
+  diamondTimer: number
   cruise: number
   tailPhase: number
   facing: number
@@ -71,6 +89,15 @@ interface Fish {
   puffTarget: number
   puffTimer: number
   bobPhase: number
+}
+
+interface FloatingDiamond {
+  x: number
+  y: number
+  vx: number
+  vy: number
+  bob: number
+  age: number
 }
 
 interface Bounds {
@@ -200,6 +227,9 @@ export class Aquarium {
   private ripples: Ripple[] = []
   private visitors: Visitor[] = []
   private monster: Monster | null = null
+  private godzilla: Godzilla | null = null
+  private diamondsHeld = 0
+  private floatingDiamonds: FloatingDiamond[] = []
   private weeds: Weed[] = []
   private pebbles: Pebble[] = []
   private decors: SandDecor[] = []
@@ -227,6 +257,14 @@ export class Aquarium {
 
   get activeVisitors(): readonly Visitor[] {
     return this.visitors
+  }
+
+  get diamonds() {
+    return this.diamondsHeld
+  }
+
+  get hasGodzilla() {
+    return this.godzilla !== null && !godzillaGone(this.godzilla)
   }
 
   resize(width: number, height: number) {
@@ -274,6 +312,8 @@ export class Aquarium {
     this.visitors = []
     this.pellets = []
     this.monster = null
+    this.godzilla = null
+    this.floatingDiamonds = []
     this.visitorTimer = 1e9
     this.monsterTimer = 1e9
     this.labels = true
@@ -290,6 +330,7 @@ export class Aquarium {
       f.birthLength = f.length
       f.maxLength = f.birthLength * MAX_GROWTH_FACTOR
       f.meals = 0
+      f.diamondTimer = DIAMOND_INTERVAL
       f.x = colW * ((i % cols) + 0.5)
       f.y = 20 + rowH * (Math.floor(i / cols) + 0.5)
       f.vx = 0
@@ -324,6 +365,7 @@ export class Aquarium {
       birthLength: length,
       maxLength: length * MAX_GROWTH_FACTOR,
       meals: 0,
+      diamondTimer: DIAMOND_INTERVAL,
       cruise,
       tailPhase: rand(0, TAU),
       facing: direction,
@@ -395,6 +437,69 @@ export class Aquarium {
     return this.monster
   }
 
+  /** Spend diamonds to summon the kaiju guardian into the tank. */
+  buyGodzilla(): boolean {
+    if (this.width === 0 || this.hasGodzilla || this.diamondsHeld < GODZILLA_COST) return false
+    this.diamondsHeld -= GODZILLA_COST
+    this.godzilla = createGodzilla(this.width, this.sandBase, this.fishScale)
+    this.emitStats()
+    return true
+  }
+
+  /** Force-grow every fish to the cap (preview / demo). */
+  maxGrowAll() {
+    for (const f of this.fish) {
+      f.length = f.maxLength
+      f.diamondTimer = rand(0.4, DIAMOND_INTERVAL)
+    }
+  }
+
+  /** Grant banked diamonds (preview / demo). */
+  grantDiamonds(n: number) {
+    this.diamondsHeld = Math.max(0, this.diamondsHeld + Math.floor(n))
+    this.emitStats()
+  }
+
+  /** Spawn a few floating diamonds near grown fish (preview / demo). */
+  burstDiamonds(count = 6) {
+    const grown = this.fish.filter((f) => this.isMaxGrown(f))
+    const pool = grown.length > 0 ? grown : this.fish
+    if (pool.length === 0) return
+    for (let i = 0; i < count; i++) this.spawnDiamondNear(pool[i % pool.length])
+  }
+
+  /** Seed diamonds, guardian, and hunter for screenshots (`?demo`). */
+  seedDemo() {
+    this.maxGrowAll()
+    this.grantDiamonds(GODZILLA_COST + 5)
+    this.burstDiamonds(8)
+    this.buyGodzilla()
+    this.spawnMonsterNow()
+  }
+
+  /**
+   * Collect a floating diamond under the pointer.
+   * Returns true when a diamond was taken (so the caller can skip sprinkling food).
+   */
+  collectAt(x: number, y: number): boolean {
+    const hitR = 16
+    let best = -1
+    let bestDist = hitR
+    for (let i = 0; i < this.floatingDiamonds.length; i++) {
+      const d = this.floatingDiamonds[i]
+      const dist = Math.hypot(d.x - x, d.y - y)
+      if (dist < bestDist) {
+        bestDist = dist
+        best = i
+      }
+    }
+    if (best < 0) return false
+    this.floatingDiamonds.splice(best, 1)
+    this.diamondsHeld += 1
+    this.emitStats()
+    return true
+  }
+
   update(dt: number) {
     if (this.width === 0) return
 
@@ -403,6 +508,8 @@ export class Aquarium {
     this.updatePellets(step)
     this.updateVisitors(step)
     this.updateMonster(step)
+    this.updateGodzilla(step)
+    this.updateFloatingDiamonds(step)
     updateTown(this.town, step, this.width, (x) => this.sandTop(x), this.time)
     if (this.labels) {
       for (const f of this.fish) f.tailPhase += step * TAU * f.species.tailHz * 0.45
@@ -433,10 +540,12 @@ export class Aquarium {
     const ordered = [...this.fish].sort((a, b) => this.depthOrder(a) - this.depthOrder(b))
     for (const f of ordered) this.drawFish(f)
     if (this.labels) this.drawLabels()
+    if (this.godzilla) drawGodzilla(ctx, this.godzilla)
     if (this.monster) {
       drawMonster(ctx, this.monster)
       drawKikiBanner(ctx, width, this.monster)
     }
+    this.drawFloatingDiamonds()
 
     for (const weed of this.weeds) if (weed.front) this.drawWeed(weed)
     this.drawBubbles()
@@ -582,13 +691,27 @@ export class Aquarium {
       this.sandBase,
       this.fish,
       (index) => {
-        if (index < 0 || index >= this.fish.length) return
+        if (index < 0 || index >= this.fish.length) return false
+        // Guardian cancels this catch attempt and then vanishes.
+        if (this.godzilla && this.godzilla.phase !== 'vanish' && this.godzilla.phase !== 'fight') {
+          startGodzillaFight(this.godzilla, this.monster!.x, this.monster!.y)
+          for (let i = 0; i < 10; i++) {
+            this.emitBubble(
+              this.monster!.x + rand(-16, 16),
+              this.monster!.y + rand(-12, 12),
+              rand(2, 5),
+              rand(40, 90),
+            )
+          }
+          this.emitStats()
+          return false
+        }
         const [gone] = this.fish.splice(index, 1)
-        // A few panic bubbles where the fish vanished.
         for (let i = 0; i < 6; i++) {
           this.emitBubble(gone.x + rand(-8, 8), gone.y + rand(-6, 6), rand(1.5, 3.5), rand(40, 70))
         }
         this.emitStats()
+        return true
       },
     )
 
@@ -596,6 +719,60 @@ export class Aquarium {
       this.monster = null
       this.monsterTimer = rand(18, 24)
     }
+  }
+
+  private updateGodzilla(dt: number) {
+    if (!this.godzilla) return
+    updateGodzilla(
+      this.godzilla,
+      dt,
+      this.width,
+      this.sandBase,
+      this.monster && (this.monster.phase === 'enter' || this.monster.phase === 'chase')
+        ? this.monster
+        : null,
+    )
+    if (godzillaGone(this.godzilla)) {
+      this.godzilla = null
+      this.emitStats()
+    }
+  }
+
+  private updateFloatingDiamonds(dt: number) {
+    for (const d of this.floatingDiamonds) {
+      d.age += dt
+      d.bob += dt * 3
+      d.x += d.vx * dt + Math.sin(d.bob) * 6 * dt
+      d.y += d.vy * dt
+      d.vy = Math.max(-12, d.vy - 4 * dt)
+      const floor = this.sandTop(d.x) - 8
+      if (d.y > floor) {
+        d.y = floor
+        d.vy = 0
+      }
+      if (d.y < 16) {
+        d.y = 16
+        d.vy = Math.abs(d.vy) * 0.2
+      }
+    }
+    // Despawn very old uncollected gems so the tank stays readable.
+    this.floatingDiamonds = this.floatingDiamonds.filter((d) => d.age < 45)
+  }
+
+  private isMaxGrown(f: Fish) {
+    return f.length >= f.maxLength - 1e-6
+  }
+
+  private spawnDiamondNear(f: Fish) {
+    if (this.floatingDiamonds.length >= MAX_FLOATING_DIAMONDS) return
+    this.floatingDiamonds.push({
+      x: f.x + rand(-10, 10),
+      y: f.y - f.length * 0.35 + rand(-6, 4),
+      vx: rand(-12, 12),
+      vy: rand(-22, -8),
+      bob: rand(0, TAU),
+      age: 0,
+    })
   }
 
   private updateFish(dt: number) {
@@ -740,6 +917,15 @@ export class Aquarium {
         const mouthY = f.y + s.mouth[1] * f.length
         if (Math.hypot(food.x - mouthX, food.y - mouthY) < f.length * 0.12 + 7) this.eat(f, food, mouthX, mouthY)
       }
+
+      // Fully grown fish mint a floating diamond every DIAMOND_INTERVAL seconds.
+      if (this.isMaxGrown(f)) {
+        f.diamondTimer -= dt
+        if (f.diamondTimer <= 0) {
+          f.diamondTimer += DIAMOND_INTERVAL
+          this.spawnDiamondNear(f)
+        }
+      }
     }
   }
 
@@ -792,7 +978,49 @@ export class Aquarium {
   }
 
   private emitStats() {
-    this.onStatsChange?.({ fish: this.fish.length, species: this.speciesCount, eaten: this.eaten })
+    this.onStatsChange?.({
+      fish: this.fish.length,
+      species: this.speciesCount,
+      eaten: this.eaten,
+      diamonds: this.diamondsHeld,
+      hasGodzilla: this.hasGodzilla,
+    })
+  }
+
+  private drawFloatingDiamonds() {
+    const { ctx } = this
+    for (const d of this.floatingDiamonds) {
+      const pulse = 1 + 0.08 * Math.sin(d.bob * 2)
+      ctx.save()
+      ctx.translate(d.x, d.y + Math.sin(d.bob) * 2)
+      ctx.scale(pulse, pulse)
+      // Faceted gem
+      ctx.beginPath()
+      ctx.moveTo(0, -8)
+      ctx.lineTo(6, -2)
+      ctx.lineTo(4, 7)
+      ctx.lineTo(-4, 7)
+      ctx.lineTo(-6, -2)
+      ctx.closePath()
+      const g = ctx.createLinearGradient(-6, -8, 6, 8)
+      g.addColorStop(0, '#e0f2fe')
+      g.addColorStop(0.45, '#38bdf8')
+      g.addColorStop(1, '#0369a1')
+      ctx.fillStyle = g
+      ctx.fill()
+      ctx.strokeStyle = '#0c4a6e'
+      ctx.lineWidth = 1.1
+      ctx.stroke()
+      ctx.beginPath()
+      ctx.moveTo(0, -8)
+      ctx.lineTo(0, 7)
+      ctx.moveTo(-6, -2)
+      ctx.lineTo(6, -2)
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.55)'
+      ctx.lineWidth = 0.9
+      ctx.stroke()
+      ctx.restore()
+    }
   }
 
   private buildScenery() {

@@ -89,7 +89,8 @@ export function updateMonster(
   width: number,
   sandBase: number,
   fish: { x: number; y: number; length: number }[],
-  removeFishAt: (index: number) => void,
+  /** Return false to cancel the catch (e.g. guardian blocked it). */
+  removeFishAt: (index: number) => boolean,
 ) {
   m.age += dt
   if (m.alertLeft > 0) m.alertLeft -= dt
@@ -137,7 +138,15 @@ export function updateMonster(
     if (readyToEat || (m.chaseLeft <= 0 && dist < catchRadius * 1.8)) {
       const index = m.targetId < fish.length ? m.targetId : pickMonsterTarget(fish.length)
       if (index !== null) {
-        removeFishAt(index)
+        const ok = removeFishAt(index)
+        if (!ok) {
+          // Guardian blocked the catch — flee without eating.
+          m.eaten = false
+          m.phase = 'leave'
+          m.facing = m.x < width / 2 ? -1 : 1
+          m.vx = m.facing * speed * 1.35
+          return
+        }
         m.eaten = true
         m.phase = 'eat'
         m.eatTimer = 0.85

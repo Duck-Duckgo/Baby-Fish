@@ -7,20 +7,30 @@
     <meta name="description" content="坏KiKi的小鱼缸：25 种外形各异的鱼，点一下水面撒鱼食，还可以放一条鱼进来。小心偶尔闯进的坏KiKi！" />
     <meta name="theme-color" content="#1a8db0" />
     <title>坏KiKi的小鱼缸</title>
-    <script type="module" crossorigin src="/assets/index.vite-Djg-S5vx.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-B7_OjA0s.css">
+    <script type="module" crossorigin src="/assets/index.vite-ffs7y3Uc.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-CBiGWXAn.css">
   </head>
   <body>
     <main class="tank">
       <canvas
         id="tank"
         role="img"
-        aria-label="一个动画鱼缸：25 种外形各异的鱼在水草和气泡之间游动，海底有卡通小镇角色与建筑。点击水里任意位置可以撒鱼食。"
+        aria-label="一个动画鱼缸：25 种外形各异的鱼在水草和气泡之间游动，海底有卡通小镇角色与建筑。点击水里任意位置可以撒鱼食；点钻石可收获。"
       ></canvas>
 
       <div class="controls">
         <button id="add-fish" class="btn btn-primary" type="button">放一条鱼</button>
       </div>
+
+      <aside class="resources" aria-label="资源">
+        <div class="diamond-bank" aria-live="polite">
+          <span class="gem" aria-hidden="true"></span>
+          <span id="diamond-count">0</span>
+        </div>
+        <button id="buy-godzilla" class="btn btn-kaiju" type="button" disabled>
+          购买哥斯拉 · 10
+        </button>
+      </aside>
     </main>
   </body>
 </html>
