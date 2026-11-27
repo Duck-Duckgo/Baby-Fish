@@ -7,15 +7,15 @@
     <meta name="description" content="坏KiKi的小鱼缸：25 种外形各异的鱼，点一下水面撒鱼食，还可以放一条鱼进来。小心偶尔闯进的坏KiKi！" />
     <meta name="theme-color" content="#1a8db0" />
     <title>坏KiKi的小鱼缸</title>
-    <script type="module" crossorigin src="/assets/index.vite-ffs7y3Uc.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-CBiGWXAn.css">
+    <script type="module" crossorigin src="/assets/index.vite-BwMkZth2.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-C4M_9pGg.css">
   </head>
   <body>
     <main class="tank">
       <canvas
         id="tank"
         role="img"
-        aria-label="一个动画鱼缸：25 种外形各异的鱼在水草和气泡之间游动，海底有卡通小镇角色与建筑。点击水里任意位置可以撒鱼食；点钻石可收获。"
+        aria-label="一个动画鱼缸：最多 100 条鱼在水草和气泡之间游动。点击水面撒鱼食；满级鱼会自动产出钻石。可用钻石购买并升级哥斯拉抵挡坏KiKi。"
       ></canvas>
 
       <div class="controls">
@@ -27,7 +27,8 @@
           <span class="gem" aria-hidden="true"></span>
           <span id="diamond-count">0</span>
         </div>
-        <button id="buy-godzilla" class="btn btn-kaiju" type="button" disabled>
+        <p id="godzilla-status" class="godzilla-status" hidden>Lv.1 · 可挡 1 次</p>
+        <button id="kaiju-action" class="btn btn-kaiju" type="button" disabled>
           购买哥斯拉 · 10
         </button>
       </aside>

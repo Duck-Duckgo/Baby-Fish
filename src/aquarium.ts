@@ -14,6 +14,7 @@ import {
   godzillaGone,
   startGodzillaFight,
   updateGodzilla,
+  upgradeGodzilla,
   type Godzilla,
 } from './godzilla.ts'
 import {
@@ -46,6 +47,8 @@ export interface AquariumStats {
   eaten: number
   diamonds: number
   hasGodzilla: boolean
+  godzillaLevel: number
+  godzillaCharges: number
 }
 
 export interface AquariumOptions {
@@ -53,11 +56,11 @@ export interface AquariumOptions {
   onStatsChange?: (stats: AquariumStats) => void
 }
 
-/** Cost to summon the kaiju guardian. */
+/** Cost to summon or upgrade the kaiju guardian. */
 export const GODZILLA_COST = 10
 /** Seconds between diamond drops from a fully grown fish. */
 export const DIAMOND_INTERVAL = 5
-const MAX_FLOATING_DIAMONDS = 24
+const MAX_FLOATING_DIAMONDS = 36
 
 interface Fish {
   species: Species
@@ -98,6 +101,9 @@ interface FloatingDiamond {
   vy: number
   bob: number
   age: number
+  /** After a short pop, homes toward the resource panel and auto-banks. */
+  homing: boolean
+  spin: number
 }
 
 interface Bounds {
@@ -162,7 +168,7 @@ interface SandDecor {
   variant: number
 }
 
-export const MAX_FISH = 30
+export const MAX_FISH = 100
 
 const MAX_PELLETS = 80
 const MAX_BUBBLES = 240
@@ -264,7 +270,15 @@ export class Aquarium {
   }
 
   get hasGodzilla() {
-    return this.godzilla !== null && !godzillaGone(this.godzilla)
+    return this.godzilla !== null && this.godzilla.phase !== 'vanish'
+  }
+
+  get godzillaLevel() {
+    return this.godzilla?.level ?? 0
+  }
+
+  get godzillaCharges() {
+    return this.godzilla?.charges ?? 0
   }
 
   resize(width: number, height: number) {
@@ -446,6 +460,15 @@ export class Aquarium {
     return true
   }
 
+  /** While a guardian is present, spend diamonds to level up looks + one extra intercept. */
+  upgradeGodzilla(): boolean {
+    if (!this.godzilla || this.godzilla.phase === 'vanish' || this.diamondsHeld < GODZILLA_COST) return false
+    this.diamondsHeld -= GODZILLA_COST
+    upgradeGodzilla(this.godzilla)
+    this.emitStats()
+    return true
+  }
+
   /** Force-grow every fish to the cap (preview / demo). */
   maxGrowAll() {
     for (const f of this.fish) {
@@ -468,36 +491,15 @@ export class Aquarium {
     for (let i = 0; i < count; i++) this.spawnDiamondNear(pool[i % pool.length])
   }
 
-  /** Seed diamonds, guardian, and hunter for screenshots (`?demo`). */
+  /** Seed diamonds, upgraded guardian, and hunter for screenshots (`?demo`). */
   seedDemo() {
     this.maxGrowAll()
-    this.grantDiamonds(GODZILLA_COST + 5)
-    this.burstDiamonds(8)
+    this.grantDiamonds(GODZILLA_COST * 4)
+    this.burstDiamonds(10)
     this.buyGodzilla()
+    this.upgradeGodzilla()
+    this.upgradeGodzilla()
     this.spawnMonsterNow()
-  }
-
-  /**
-   * Collect a floating diamond under the pointer.
-   * Returns true when a diamond was taken (so the caller can skip sprinkling food).
-   */
-  collectAt(x: number, y: number): boolean {
-    const hitR = 16
-    let best = -1
-    let bestDist = hitR
-    for (let i = 0; i < this.floatingDiamonds.length; i++) {
-      const d = this.floatingDiamonds[i]
-      const dist = Math.hypot(d.x - x, d.y - y)
-      if (dist < bestDist) {
-        bestDist = dist
-        best = i
-      }
-    }
-    if (best < 0) return false
-    this.floatingDiamonds.splice(best, 1)
-    this.diamondsHeld += 1
-    this.emitStats()
-    return true
   }
 
   update(dt: number) {
@@ -692,7 +694,7 @@ export class Aquarium {
       this.fish,
       (index) => {
         if (index < 0 || index >= this.fish.length) return false
-        // Guardian cancels this catch attempt and then vanishes.
+        // Guardian cancels this catch (spends one charge; leaves only when charges hit 0).
         if (this.godzilla && this.godzilla.phase !== 'vanish' && this.godzilla.phase !== 'fight') {
           startGodzillaFight(this.godzilla, this.monster!.x, this.monster!.y)
           for (let i = 0; i < 10; i++) {
@@ -739,24 +741,44 @@ export class Aquarium {
   }
 
   private updateFloatingDiamonds(dt: number) {
+    const bankX = this.width - 56
+    const bankY = 48
+    const kept: FloatingDiamond[] = []
+    let gained = 0
+
     for (const d of this.floatingDiamonds) {
       d.age += dt
-      d.bob += dt * 3
-      d.x += d.vx * dt + Math.sin(d.bob) * 6 * dt
-      d.y += d.vy * dt
-      d.vy = Math.max(-12, d.vy - 4 * dt)
-      const floor = this.sandTop(d.x) - 8
-      if (d.y > floor) {
-        d.y = floor
-        d.vy = 0
+      d.bob += dt * 4
+      d.spin += dt * 3.5
+
+      if (!d.homing && d.age > 0.55) d.homing = true
+
+      if (d.homing) {
+        const dx = bankX - d.x
+        const dy = bankY - d.y
+        const dist = Math.hypot(dx, dy) || 1
+        const speed = 220 + d.age * 40
+        d.vx = (dx / dist) * speed
+        d.vy = (dy / dist) * speed
+        d.x += d.vx * dt
+        d.y += d.vy * dt
+        if (dist < 18) {
+          gained += 1
+          continue
+        }
+      } else {
+        d.x += d.vx * dt + Math.sin(d.bob) * 8 * dt
+        d.y += d.vy * dt
+        d.vy = Math.max(-18, d.vy - 6 * dt)
       }
-      if (d.y < 16) {
-        d.y = 16
-        d.vy = Math.abs(d.vy) * 0.2
-      }
+      kept.push(d)
     }
-    // Despawn very old uncollected gems so the tank stays readable.
-    this.floatingDiamonds = this.floatingDiamonds.filter((d) => d.age < 45)
+
+    this.floatingDiamonds = kept
+    if (gained > 0) {
+      this.diamondsHeld += gained
+      this.emitStats()
+    }
   }
 
   private isMaxGrown(f: Fish) {
@@ -768,10 +790,12 @@ export class Aquarium {
     this.floatingDiamonds.push({
       x: f.x + rand(-10, 10),
       y: f.y - f.length * 0.35 + rand(-6, 4),
-      vx: rand(-12, 12),
-      vy: rand(-22, -8),
+      vx: rand(-18, 18),
+      vy: rand(-28, -10),
       bob: rand(0, TAU),
       age: 0,
+      homing: false,
+      spin: rand(0, TAU),
     })
   }
 
@@ -984,41 +1008,73 @@ export class Aquarium {
       eaten: this.eaten,
       diamonds: this.diamondsHeld,
       hasGodzilla: this.hasGodzilla,
+      godzillaLevel: this.godzillaLevel,
+      godzillaCharges: this.godzillaCharges,
     })
   }
 
   private drawFloatingDiamonds() {
     const { ctx } = this
     for (const d of this.floatingDiamonds) {
-      const pulse = 1 + 0.08 * Math.sin(d.bob * 2)
+      const pulse = 1 + 0.06 * Math.sin(d.bob * 2)
+      const shrink = d.homing ? Math.max(0.55, 1 - d.age * 0.08) : 1
       ctx.save()
-      ctx.translate(d.x, d.y + Math.sin(d.bob) * 2)
-      ctx.scale(pulse, pulse)
-      // Faceted gem
+      ctx.translate(d.x, d.y + Math.sin(d.bob) * 1.5)
+      ctx.rotate(d.spin * 0.15)
+      ctx.scale(pulse * shrink, pulse * shrink)
+
+      // Classic round-brilliant silhouette: octagon crown + pointed pavilion
       ctx.beginPath()
-      ctx.moveTo(0, -8)
-      ctx.lineTo(6, -2)
-      ctx.lineTo(4, 7)
-      ctx.lineTo(-4, 7)
-      ctx.lineTo(-6, -2)
+      ctx.moveTo(0, -9)
+      ctx.lineTo(5, -4)
+      ctx.lineTo(7, 1)
+      ctx.lineTo(4, 8)
+      ctx.lineTo(0, 11)
+      ctx.lineTo(-4, 8)
+      ctx.lineTo(-7, 1)
+      ctx.lineTo(-5, -4)
       ctx.closePath()
-      const g = ctx.createLinearGradient(-6, -8, 6, 8)
-      g.addColorStop(0, '#e0f2fe')
-      g.addColorStop(0.45, '#38bdf8')
-      g.addColorStop(1, '#0369a1')
-      ctx.fillStyle = g
+      const body = ctx.createLinearGradient(-7, -9, 7, 11)
+      body.addColorStop(0, '#f8fbff')
+      body.addColorStop(0.28, '#c7e9ff')
+      body.addColorStop(0.55, '#5ec8ff')
+      body.addColorStop(0.82, '#1d8fd6')
+      body.addColorStop(1, '#0b4f8a')
+      ctx.fillStyle = body
       ctx.fill()
-      ctx.strokeStyle = '#0c4a6e'
-      ctx.lineWidth = 1.1
+      ctx.strokeStyle = 'rgba(15, 60, 110, 0.55)'
+      ctx.lineWidth = 1
       ctx.stroke()
+
+      // Crown facets
       ctx.beginPath()
-      ctx.moveTo(0, -8)
-      ctx.lineTo(0, 7)
-      ctx.moveTo(-6, -2)
-      ctx.lineTo(6, -2)
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.55)'
-      ctx.lineWidth = 0.9
+      ctx.moveTo(0, -9)
+      ctx.lineTo(0, 1)
+      ctx.moveTo(-5, -4)
+      ctx.lineTo(5, -4)
+      ctx.moveTo(-7, 1)
+      ctx.lineTo(7, 1)
+      ctx.moveTo(-5, -4)
+      ctx.lineTo(0, 1)
+      ctx.lineTo(5, -4)
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.65)'
+      ctx.lineWidth = 0.85
       ctx.stroke()
+
+      // Pavilion tip highlight
+      ctx.beginPath()
+      ctx.moveTo(-4, 8)
+      ctx.lineTo(0, 1)
+      ctx.lineTo(4, 8)
+      ctx.strokeStyle = 'rgba(180, 230, 255, 0.5)'
+      ctx.stroke()
+
+      // Specular sparkle
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'
+      ctx.beginPath()
+      ctx.arc(-2.2, -5.5, 1.3, 0, TAU)
+      ctx.fill()
+
       ctx.restore()
     }
   }

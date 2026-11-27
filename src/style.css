@@ -81,13 +81,26 @@ body {
 }
 
 .gem {
-  width: 16px;
-  height: 20px;
+  width: 15px;
+  height: 18px;
   display: inline-block;
-  background: linear-gradient(145deg, #e0f2fe 10%, #38bdf8 45%, #0369a1 100%);
-  clip-path: polygon(50% 0%, 100% 28%, 78% 100%, 22% 100%, 0% 28%);
-  box-shadow: 0 0 10px rgba(56, 189, 248, 0.45);
+  background: linear-gradient(160deg, #f8fbff 0%, #c7e9ff 30%, #5ec8ff 55%, #1d8fd6 80%, #0b4f8a 100%);
+  clip-path: polygon(50% 0%, 86% 28%, 100% 48%, 70% 100%, 30% 100%, 0% 48%, 14% 28%);
+  box-shadow: 0 0 12px rgba(94, 200, 255, 0.55);
   flex: 0 0 auto;
+}
+
+.godzilla-status {
+  margin: 0;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(226, 252, 232, 0.92);
+  letter-spacing: 0.02em;
+}
+
+.godzilla-status[hidden] {
+  display: none;
 }
 
 .btn {
