@@ -1,5 +1,11 @@
 import './style.css'
-import { Aquarium, FOOD_UPGRADE_COST, GODZILLA_COST, LAZIJI_COST } from './aquarium.ts'
+import {
+  Aquarium,
+  FOOD_UPGRADE_COST,
+  GODZILLA_COST,
+  LAZIJI_COST,
+  TREASURE_COST,
+} from './aquarium.ts'
 
 function start() {
   const canvas = document.querySelector<HTMLCanvasElement>('#tank')
@@ -8,7 +14,12 @@ function start() {
   const kaijuAction = document.querySelector<HTMLButtonElement>('#kaiju-action')
   const foodUpgrade = document.querySelector<HTMLButtonElement>('#food-upgrade')
   const lazijiBuy = document.querySelector<HTMLButtonElement>('#laziji-buy')
+  const treasureBuy = document.querySelector<HTMLButtonElement>('#treasure-buy')
   const godzillaStatus = document.querySelector<HTMLElement>('#godzilla-status')
+  const medalBadge = document.querySelector<HTMLElement>('#dongying-medal')
+  const treasureModal = document.querySelector<HTMLElement>('#treasure-modal')
+  const treasureChest = document.querySelector<HTMLElement>('#treasure-chest')
+  const treasureConfirm = document.querySelector<HTMLButtonElement>('#treasure-confirm')
   if (
     !canvas ||
     !addButton ||
@@ -16,7 +27,12 @@ function start() {
     !kaijuAction ||
     !foodUpgrade ||
     !lazijiBuy ||
-    !godzillaStatus
+    !treasureBuy ||
+    !godzillaStatus ||
+    !medalBadge ||
+    !treasureModal ||
+    !treasureChest ||
+    !treasureConfirm
   ) {
     return
   }
@@ -27,6 +43,7 @@ function start() {
     kaijuAction.disabled = true
     foodUpgrade.disabled = true
     lazijiBuy.disabled = true
+    treasureBuy.disabled = true
     return
   }
 
@@ -39,6 +56,7 @@ function start() {
     foodUpgraded: boolean
     lazijiOwned: boolean
     marukoBanished: boolean
+    medalOwned: boolean
   }) => {
     diamondCount.textContent = String(stats.diamonds)
     if (stats.hasGodzilla) {
@@ -76,6 +94,18 @@ function start() {
       lazijiBuy.disabled = stats.diamonds < LAZIJI_COST
       lazijiBuy.classList.remove('is-owned')
     }
+
+    if (stats.medalOwned) {
+      treasureBuy.textContent = '大宝藏已开启'
+      treasureBuy.disabled = true
+      treasureBuy.classList.add('is-owned')
+      medalBadge.hidden = false
+    } else {
+      treasureBuy.textContent = `大宝藏 · ${TREASURE_COST}`
+      treasureBuy.disabled = stats.diamonds < TREASURE_COST
+      treasureBuy.classList.remove('is-owned')
+      medalBadge.hidden = true
+    }
   }
 
   const aquarium = new Aquarium(ctx, {
@@ -90,8 +120,29 @@ function start() {
         foodUpgraded: stats.foodUpgraded,
         lazijiOwned: stats.lazijiOwned,
         marukoBanished: stats.marukoBanished,
+        medalOwned: stats.medalOwned,
       }),
   })
+
+  const openTreasureRitual = () => {
+    treasureModal.hidden = false
+    treasureModal.classList.remove('is-revealed')
+    treasureChest.classList.remove('is-open')
+    // Let the browser paint the closed chest, then open it slowly.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        treasureChest.classList.add('is-open')
+        treasureModal.classList.add('is-revealed')
+      })
+    })
+  }
+
+  const closeTreasureRitual = () => {
+    aquarium.claimMedal()
+    treasureModal.hidden = true
+    treasureModal.classList.remove('is-revealed')
+    treasureChest.classList.remove('is-open')
+  }
 
   let frameId = 0
   let lastFrame = performance.now()
@@ -127,6 +178,7 @@ function start() {
     foodUpgraded: aquarium.hasFoodUpgrade,
     lazijiOwned: aquarium.hasLaziji,
     marukoBanished: aquarium.isMarukoBanished,
+    medalOwned: aquarium.hasMedal,
   })
 
   const params = new URLSearchParams(location.search)
@@ -151,6 +203,8 @@ function start() {
   if (params.has('demo')) {
     requestAnimationFrame(() => {
       aquarium.seedDemo()
+      // Open treasure for the screenshot after a short beat.
+      if (aquarium.buyTreasure()) openTreasureRitual()
       syncResources({
         diamonds: aquarium.diamonds,
         hasGodzilla: aquarium.hasGodzilla,
@@ -160,6 +214,7 @@ function start() {
         foodUpgraded: aquarium.hasFoodUpgrade,
         lazijiOwned: aquarium.hasLaziji,
         marukoBanished: aquarium.isMarukoBanished,
+        medalOwned: aquarium.hasMedal,
       })
     })
   }
@@ -184,6 +239,15 @@ function start() {
 
   lazijiBuy.addEventListener('click', () => {
     aquarium.buyLaziji()
+  })
+
+  treasureBuy.addEventListener('click', () => {
+    if (!aquarium.buyTreasure()) return
+    openTreasureRitual()
+  })
+
+  treasureConfirm.addEventListener('click', () => {
+    closeTreasureRitual()
   })
 
   frameId = requestAnimationFrame(frame)

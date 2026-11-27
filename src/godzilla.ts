@@ -22,8 +22,8 @@ export interface Godzilla {
   vx: number
   vy: number
   facing: 1 | -1
-  /** Base draw scale (grows ×1.2 per level). */
-  scale: number
+  /** Level-1 body scale; drawn size is baseScale × 1.2^(level-1). */
+  baseScale: number
   phase: GodzillaPhase
   age: number
   bobPhase: number
@@ -36,8 +36,14 @@ export interface Godzilla {
   charges: number
   waves: WaveBlast[]
   spitCooldown: number
-  /** If drive started at max level, demote once on successful wave hit. */
+  /** Level when the current drive began (for a single 10→9 demote). */
+  driveStartLevel: number
+  /** If drive started at max level, demote exactly once on first successful hit. */
   demoteOnSuccess: boolean
+}
+
+export function godzillaScale(g: Godzilla): number {
+  return g.baseScale * Math.pow(1.2, g.level - 1)
 }
 
 export function createGodzilla(width: number, sandBase: number, scale: number): Godzilla {
@@ -50,7 +56,7 @@ export function createGodzilla(width: number, sandBase: number, scale: number): 
     vx: 0,
     vy: 0,
     facing: fromLeft ? 1 : -1,
-    scale: s,
+    baseScale: s,
     phase: 'enter',
     age: 0,
     bobPhase: Math.random() * TAU,
@@ -62,6 +68,7 @@ export function createGodzilla(width: number, sandBase: number, scale: number): 
     charges: 1,
     waves: [],
     spitCooldown: 0,
+    driveStartLevel: 1,
     demoteOnSuccess: false,
   }
 }
@@ -75,24 +82,28 @@ export function upgradeGodzilla(g: Godzilla): boolean {
   if (g.level >= GODZILLA_MAX_LEVEL) return false
   g.level += 1
   g.charges += 1
-  g.scale *= 1.2
   return true
 }
 
-/** −1 level and ÷1.2 size after a max-level successful drive. */
+/**
+ * After a max-level successful drive: set level to driveStartLevel - 1 (e.g. 10→9).
+ * Clears demoteOnSuccess first so extra wave hits cannot stack demotes down to 1.
+ */
 export function demoteGodzilla(g: Godzilla): boolean {
-  if (g.level <= 1) return false
-  g.level -= 1
-  g.scale /= 1.2
+  if (!g.demoteOnSuccess) return false
+  g.demoteOnSuccess = false
+  if (g.driveStartLevel < GODZILLA_MAX_LEVEL) return false
+  g.level = Math.max(1, g.driveStartLevel - 1)
   return true
 }
 
 /**
  * Start a wave-spit drive-away. Closer contact finishes sooner.
- * Consumes exactly one charge. Max-level drives demote on success.
+ * Consumes exactly one charge. Max-level drives demote once on success.
  */
 export function startGodzillaDrive(g: Godzilla, hx: number, hy: number): boolean {
   if (g.phase === 'drive' || g.phase === 'vanish' || g.charges <= 0) return false
+  g.driveStartLevel = g.level
   g.demoteOnSuccess = g.level >= GODZILLA_MAX_LEVEL
   g.charges -= 1
   g.phase = 'drive'
@@ -112,8 +123,9 @@ function spitWave(g: Godzilla, hx: number, hy: number) {
   const dy = hy - g.y
   const dist = Math.hypot(dx, dy) || 1
   const speed = 210 + g.level * 8
-  const mouthX = g.x + g.facing * 22 * g.scale
-  const mouthY = g.y - 6 * g.scale
+  const sc = godzillaScale(g)
+  const mouthX = g.x + g.facing * 22 * sc
+  const mouthY = g.y - 6 * sc
   g.waves.push({
     x: mouthX,
     y: mouthY,
@@ -136,7 +148,7 @@ export function updateGodzilla(
   g.age += dt
   const top = 36
   const bottom = Math.max(top + 30, sandBase - 30)
-  const speed = (58 + g.level * 3) * g.scale
+  const speed = (58 + g.level * 3) * godzillaScale(g)
 
   // Wave projectiles
   for (const w of g.waves) {
@@ -171,7 +183,7 @@ export function updateGodzilla(
       g.targetX = hunter.x
       g.targetY = hunter.y
       const dist = Math.hypot(hunter.x - g.x, hunter.y - g.y)
-      const engage = 72 + g.scale * 28
+      const engage = 72 + godzillaScale(g) * 28
       if (dist < engage && g.charges > 0) {
         startGodzillaDrive(g, hunter.x, hunter.y)
         return
@@ -268,7 +280,8 @@ export function drawGodzilla(ctx: CanvasRenderingContext2D, g: Godzilla) {
   const fade = g.phase === 'vanish' ? Math.max(0, g.vanishTimer / 0.85) : 1
   ctx.globalAlpha = fade
   ctx.translate(g.x, g.y)
-  ctx.scale(g.facing * g.scale, g.scale)
+  const sc = godzillaScale(g)
+  ctx.scale(g.facing * sc, sc)
 
   const shake = g.phase === 'drive' ? Math.sin(g.age * 36) * 1.6 : 0
   ctx.translate(shake, -shake * 0.3)

@@ -1698,4 +1698,195 @@ export const SPECIES: readonly Species[] = [
       }
     },
   },
+  {
+    id: 'mandarinfish',
+    name: '麒麟鱼',
+    fact: '蓝橙涡纹，像会游的水彩',
+    size: [28, 38],
+    speed: [18, 28],
+    zone: 'lower',
+    style: 'hover',
+    tailHz: 2.4,
+    mouth: [0.42, 0],
+    halfHeight: 0.22,
+    chase: 160,
+    bob: 0.04,
+    draw(ctx, p) {
+      const b: Body = { nose: 0.42, tail: -0.22, top: 0.2, bottom: 0.18, ped: 0.06, peak: 0.02, round: 0.45 }
+      const edge = 1.1 * p.px
+      ctx.beginPath()
+      ctx.moveTo(-0.08, -0.18)
+      ctx.quadraticCurveTo(0.02, -0.34 + p.wag * 0.08, 0.2, -0.16)
+      ctx.closePath()
+      paint(ctx, '#22d3ee', '#0ea5e9', edge)
+      ctx.beginPath()
+      ctx.moveTo(-0.06, 0.16)
+      ctx.quadraticCurveTo(0.04, 0.3 + p.wag * 0.06, 0.18, 0.14)
+      ctx.closePath()
+      paint(ctx, '#fb923c', '#ea580c', edge)
+      tailFin(ctx, b.tail, 'round', 0.16, p.wag * 0.35, '#2563eb', '#1e3a8a', edge)
+      body(ctx, b)
+      paint(ctx, vertical(ctx, 'mandarin', -0.2, 0.2, [[0, '#1d4ed8'], [0.5, '#f97316'], [1, '#16a34a']]), '#0f172a', edge)
+      ctx.strokeStyle = '#38bdf8'
+      ctx.lineWidth = 1.4 * p.px
+      for (const y of [-0.08, 0, 0.08]) {
+        ctx.beginPath()
+        ctx.moveTo(-0.15, y)
+        ctx.bezierCurveTo(0, y - 0.06, 0.12, y + 0.05, 0.28, y)
+        ctx.stroke()
+      }
+      eye(ctx, 0.28, -0.04, 0.035, '#111827')
+    },
+  },
+  {
+    id: 'parrotfish',
+    name: '鹦鹉鱼',
+    fact: '鸟嘴嘴，喜欢啃珊瑚',
+    size: [48, 70],
+    speed: [26, 40],
+    zone: 'middle',
+    style: 'cruise',
+    tailHz: 1.6,
+    mouth: [0.48, 0.02],
+    halfHeight: 0.24,
+    chase: 220,
+    draw(ctx, p) {
+      const b: Body = { nose: 0.46, tail: -0.28, top: 0.22, bottom: 0.2, ped: 0.07, peak: 0.04, snout: 0.04, round: 0.35 }
+      const edge = 1.2 * p.px
+      ctx.beginPath()
+      ctx.moveTo(-0.05, -0.18)
+      ctx.quadraticCurveTo(0.06, -0.32 + p.wag * 0.05, 0.22, -0.12)
+      ctx.closePath()
+      paint(ctx, '#2dd4bf', '#0f766e', edge)
+      ctx.beginPath()
+      ctx.moveTo(0.02, 0.14)
+      ctx.quadraticCurveTo(0.1, 0.26, 0.2, 0.12)
+      ctx.closePath()
+      paint(ctx, '#4ade80', '#166534', edge)
+      tailFin(ctx, b.tail, 'forked', 0.2, p.wag * 0.4, '#14b8a6', '#115e59', edge)
+      body(ctx, b)
+      paint(ctx, vertical(ctx, 'parrot', -0.22, 0.22, [[0, '#67e8f9'], [0.45, '#34d399'], [1, '#a3e635']]), '#115e59', edge)
+      poly(ctx, [0.4, -0.04, 0.54, 0.02, 0.4, 0.08, 0.36, 0.02])
+      paint(ctx, '#fde68a', '#92400e', 1 * p.px)
+      eye(ctx, 0.3, -0.05, 0.04, '#111827')
+    },
+  },
+  {
+    id: 'barracuda',
+    name: '梭鱼',
+    fact: '细长银亮，冲刺很快',
+    size: [70, 100],
+    speed: [55, 90],
+    zone: 'upper',
+    style: 'dart',
+    tailHz: 2.8,
+    mouth: [0.5, 0],
+    halfHeight: 0.1,
+    chase: 280,
+    draw(ctx, p) {
+      const b: Body = { nose: 0.5, tail: -0.34, top: 0.08, bottom: 0.07, ped: 0.025, peak: 0.05, snout: -0.02, round: 0.12 }
+      const edge = 1.1 * p.px
+      ctx.beginPath()
+      ctx.moveTo(0.02, -0.07)
+      ctx.quadraticCurveTo(0.1, -0.14 + p.wag * 0.04, 0.2, -0.04)
+      ctx.closePath()
+      paint(ctx, '#94a3b8', '#475569', edge)
+      tailFin(ctx, b.tail, 'forked', 0.16, p.wag * 0.5, '#cbd5e1', '#475569', edge)
+      body(ctx, b)
+      paint(ctx, vertical(ctx, 'barra', -0.1, 0.1, [[0, '#e2e8f0'], [1, '#64748b']]), '#334155', edge)
+      ctx.strokeStyle = 'rgba(15, 23, 42, 0.35)'
+      ctx.lineWidth = 1 * p.px
+      for (const x of [0.1, 0, -0.1, -0.2]) {
+        ctx.beginPath()
+        ctx.moveTo(x, -0.06)
+        ctx.lineTo(x - 0.02, 0.06)
+        ctx.stroke()
+      }
+      ctx.strokeStyle = '#0f172a'
+      ctx.beginPath()
+      ctx.moveTo(0.38, 0.01)
+      ctx.lineTo(0.5, 0.01)
+      ctx.stroke()
+      eye(ctx, 0.34, -0.02, 0.028, '#111827')
+    },
+  },
+  {
+    id: 'jellyfish',
+    name: '水母',
+    fact: '伞盖漂漂，触手软软',
+    size: [36, 52],
+    speed: [8, 16],
+    zone: 'any',
+    style: 'hover',
+    tailHz: 0.9,
+    mouth: [0, 0.2],
+    halfHeight: 0.45,
+    chase: 120,
+    upright: true,
+    bob: 0.08,
+    draw(ctx, p) {
+      const pulse = 1 + Math.sin(p.phase) * 0.06
+      ctx.save()
+      ctx.scale(pulse, 1)
+      ctx.beginPath()
+      ctx.ellipse(0, -0.12, 0.28, 0.2, 0, Math.PI, TAU)
+      ctx.ellipse(0, -0.12, 0.28, 0.08, 0, 0, Math.PI)
+      paint(ctx, radial(ctx, 'jelly', 0, -0.16, 0.3, [[0, 'rgba(233,213,255,0.95)'], [1, 'rgba(124,58,237,0.55)']]), 'rgba(76,29,149,0.5)', 1 * p.px)
+      ctx.restore()
+      ctx.strokeStyle = 'rgba(196, 181, 253, 0.85)'
+      ctx.lineWidth = 1.5 * p.px
+      ctx.lineCap = 'round'
+      for (let i = 0; i < 6; i++) {
+        const x = -0.18 + i * 0.07
+        const sway = Math.sin(p.phase * 1.5 + i) * 0.06
+        ctx.beginPath()
+        ctx.moveTo(x, 0)
+        ctx.quadraticCurveTo(x + sway, 0.18, x - sway * 0.5, 0.38 + (i % 2) * 0.06)
+        ctx.stroke()
+      }
+    },
+  },
+  {
+    id: 'squid',
+    name: '鱿鱼',
+    fact: '喷水倒游，触手一把',
+    size: [42, 60],
+    speed: [35, 60],
+    zone: 'middle',
+    style: 'dart',
+    tailHz: 2.2,
+    mouth: [0.42, 0],
+    halfHeight: 0.18,
+    chase: 240,
+    draw(ctx, p) {
+      // Mantle
+      ctx.beginPath()
+      ctx.ellipse(0.05, 0, 0.28, 0.14, 0, 0, TAU)
+      paint(ctx, vertical(ctx, 'squid', -0.14, 0.14, [[0, '#fda4af'], [1, '#e11d48']]), '#9f1239', 1.1 * p.px)
+      // Fin wings
+      ctx.beginPath()
+      ctx.ellipse(-0.05, -0.14, 0.16, 0.06, -0.2 + p.wag * 0.1, 0, TAU)
+      ctx.ellipse(-0.05, 0.14, 0.16, 0.06, 0.2 - p.wag * 0.1, 0, TAU)
+      paint(ctx, '#fb7185')
+      // Tentacles
+      ctx.strokeStyle = '#be123c'
+      ctx.lineWidth = 2 * p.px
+      ctx.lineCap = 'round'
+      for (let i = 0; i < 5; i++) {
+        const y = -0.08 + i * 0.04
+        const flick = Math.sin(p.phase * 2 + i) * 0.05
+        ctx.beginPath()
+        ctx.moveTo(0.28, y)
+        ctx.quadraticCurveTo(0.4 + flick, y + flick, 0.5, y + flick * 1.5)
+        ctx.stroke()
+      }
+      eye(ctx, 0.18, -0.03, 0.045, '#111827')
+      // Eye highlight ring
+      ctx.strokeStyle = '#fff'
+      ctx.lineWidth = 1.2 * p.px
+      ctx.beginPath()
+      ctx.arc(0.18, -0.03, 0.05, 0, TAU)
+      ctx.stroke()
+    },
+  },
 ]

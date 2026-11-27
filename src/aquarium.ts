@@ -56,6 +56,7 @@ export interface AquariumStats {
   foodUpgraded: boolean
   lazijiOwned: boolean
   marukoBanished: boolean
+  medalOwned: boolean
 }
 
 export interface AquariumOptions {
@@ -69,6 +70,8 @@ export const GODZILLA_COST = 10
 export const FOOD_UPGRADE_COST = 20
 /** Cost to buy the spicy-chicken seal that banishes KiKi. */
 export const LAZIJI_COST = 100
+/** Cost to open the One Piece treasure for the Dongying medal. */
+export const TREASURE_COST = 1000
 /** Seconds between diamond drops from a fully grown fish. */
 export const DIAMOND_INTERVAL = 5
 const MAX_FLOATING_DIAMONDS = 36
@@ -257,6 +260,7 @@ export class Aquarium {
   private marukoBanished = false
   /** Pull KiKi into the laziji bowl after purchase / next spawn. */
   private sealingMaruko = false
+  private medalOwned = false
   private weeds: Weed[] = []
   private pebbles: Pebble[] = []
   private decors: SandDecor[] = []
@@ -316,6 +320,10 @@ export class Aquarium {
 
   get isMarukoBanished() {
     return this.marukoBanished
+  }
+
+  get hasMedal() {
+    return this.medalOwned
   }
 
   private get lazijiBowl() {
@@ -542,6 +550,25 @@ export class Aquarium {
     return true
   }
 
+  /**
+   * Spend TREASURE_COST diamonds to unlock the treasure chest ritual.
+   * Caller shows the opening UI; call `claimMedal()` after the player confirms.
+   */
+  buyTreasure(): boolean {
+    if (this.medalOwned || this.diamondsHeld < TREASURE_COST) return false
+    this.diamondsHeld -= TREASURE_COST
+    this.emitStats()
+    return true
+  }
+
+  /** Persist the Dongying medal after the treasure chest is confirmed. */
+  claimMedal(): boolean {
+    if (this.medalOwned) return false
+    this.medalOwned = true
+    this.emitStats()
+    return true
+  }
+
   /** Force-grow every fish to the cap (preview / demo). */
   maxGrowAll() {
     for (const f of this.fish) {
@@ -567,7 +594,7 @@ export class Aquarium {
   /** Seed diamonds, upgraded guardian, burgers, laziji, and hunter for screenshots (`?demo`). */
   seedDemo() {
     this.maxGrowAll()
-    this.grantDiamonds(GODZILLA_COST * 12 + FOOD_UPGRADE_COST + LAZIJI_COST)
+    this.grantDiamonds(GODZILLA_COST * 12 + FOOD_UPGRADE_COST + LAZIJI_COST + TREASURE_COST)
     this.burstDiamonds(8)
     this.buyGodzilla()
     while (this.godzilla && this.godzilla.level < GODZILLA_MAX_LEVEL) {
@@ -577,6 +604,21 @@ export class Aquarium {
     this.buyLaziji()
     this.sprinkle(this.width * 0.55, this.height * 0.35, SPRINKLE_COUNT)
     this.spawnMonsterNow()
+  }
+
+  /** Demo helper: max-level drive demote should land on 9, not 1. */
+  debugDemoteFromMax(): number {
+    if (!this.godzilla) this.buyGodzilla()
+    while (this.godzilla && this.godzilla.level < GODZILLA_MAX_LEVEL) {
+      this.grantDiamonds(GODZILLA_COST)
+      if (!this.upgradeGodzilla()) break
+    }
+    if (!this.godzilla) return -1
+    this.godzilla.driveStartLevel = this.godzilla.level
+    this.godzilla.demoteOnSuccess = true
+    demoteGodzilla(this.godzilla)
+    this.emitStats()
+    return this.godzilla.level
   }
 
   update(dt: number) {
@@ -856,10 +898,8 @@ export class Aquarium {
       if (!this.monster || !this.godzilla) return
       if (this.monster.phase === 'leave') return
       driveMonsterAway(this.monster, this.godzilla.x, this.width)
-      if (this.godzilla.demoteOnSuccess) {
-        demoteGodzilla(this.godzilla)
-        this.godzilla.demoteOnSuccess = false
-      }
+      // Exactly one demote per max-level drive (10→9), never stacked to 1.
+      demoteGodzilla(this.godzilla)
       for (let i = 0; i < 8; i++) {
         this.emitBubble(
           this.monster.x + rand(-14, 14),
@@ -1164,6 +1204,7 @@ export class Aquarium {
       foodUpgraded: this.foodUpgraded,
       lazijiOwned: this.lazijiOwned,
       marukoBanished: this.marukoBanished,
+      medalOwned: this.medalOwned,
     })
   }
 
