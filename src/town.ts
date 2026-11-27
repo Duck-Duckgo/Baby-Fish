@@ -61,7 +61,8 @@ export function createTown(width: number, sandTop: (x: number) => number, scale:
       bobPhase: Math.random() * TAU,
       wanderTimer: 1 + Math.random() * 2,
       targetX: x,
-      scale: s,
+      // Slightly larger so the homage silhouettes read clearly on the sand.
+      scale: s * 1.25,
     }
   })
 
@@ -237,229 +238,384 @@ function drawBurgerStand(ctx: CanvasRenderingContext2D) {
 }
 
 function drawSponge(ctx: CanvasRenderingContext2D, phase: number) {
-  const bounce = Math.abs(Math.sin(phase)) * 2
+  const bounce = Math.abs(Math.sin(phase)) * 2.4
   ctx.translate(0, -bounce)
 
+  // Shoes + socks
+  ctx.fillStyle = '#111827'
+  roundRect(ctx, -12, 0, 8, 4, 1.5)
+  roundRect(ctx, 4, 0, 8, 4, 1.5)
+  ctx.fill()
+  ctx.fillStyle = '#fff'
+  ctx.fillRect(-11, -3, 6, 3.5)
+  ctx.fillRect(5, -3, 6, 3.5)
+
   // Legs
-  ctx.strokeStyle = '#b45309'
-  ctx.lineWidth = 3.2
+  ctx.strokeStyle = '#facc15'
+  ctx.lineWidth = 3.4
   ctx.lineCap = 'round'
   ctx.beginPath()
-  ctx.moveTo(-7, -6)
-  ctx.lineTo(-9, 2 + Math.sin(phase) * 2)
-  ctx.moveTo(7, -6)
-  ctx.lineTo(9, 2 + Math.sin(phase + 1) * 2)
+  ctx.moveTo(-7, -10)
+  ctx.lineTo(-8, -2 + Math.sin(phase) * 1.5)
+  ctx.moveTo(7, -10)
+  ctx.lineTo(8, -2 + Math.sin(phase + 1) * 1.5)
   ctx.stroke()
+
+  // Square pants (brown with black belt)
+  ctx.fillStyle = '#a16207'
+  roundRect(ctx, -16, -16, 32, 10, 2)
+  ctx.fill()
+  ctx.fillStyle = '#111827'
+  ctx.fillRect(-16, -16, 32, 2.4)
+  // Belt buckle
+  ctx.fillStyle = '#fbbf24'
+  roundRect(ctx, -3, -16.5, 6, 3.2, 1)
+  ctx.fill()
+
+  // White shirt collar strip
+  ctx.fillStyle = '#fff'
+  ctx.fillRect(-16, -19, 32, 3.2)
 
   // Arms
+  ctx.strokeStyle = '#facc15'
+  ctx.lineWidth = 3.2
   ctx.beginPath()
-  ctx.moveTo(-14, -22)
-  ctx.lineTo(-22, -14 + Math.sin(phase) * 3)
-  ctx.moveTo(14, -22)
-  ctx.lineTo(22, -16 + Math.cos(phase) * 3)
+  ctx.moveTo(-16, -28)
+  ctx.lineTo(-24, -18 + Math.sin(phase) * 3)
+  ctx.moveTo(16, -28)
+  ctx.lineTo(24, -20 + Math.cos(phase) * 3)
   ctx.stroke()
+  // Cuffs
+  ctx.fillStyle = '#fff'
+  roundRect(ctx, -27, -20 + Math.sin(phase) * 3, 6, 3, 1)
+  roundRect(ctx, 21, -22 + Math.cos(phase) * 3, 6, 3, 1)
+  ctx.fill()
 
-  // Body
-  roundRect(ctx, -14, -40, 28, 34, 5)
-  ctx.fillStyle = '#facc15'
+  // Body square
+  roundRect(ctx, -16, -46, 32, 28, 4)
+  ctx.fillStyle = '#fde047'
   ctx.fill()
   ctx.strokeStyle = '#ca8a04'
-  ctx.lineWidth = 1.4
+  ctx.lineWidth = 1.5
   ctx.stroke()
 
   // Pores
   ctx.fillStyle = '#eab308'
   for (const [x, y, r] of [
-    [-6, -30, 2.2],
-    [5, -28, 1.8],
-    [-2, -18, 2.4],
-    [7, -16, 1.6],
+    [-9, -40, 2.4],
+    [8, -38, 2],
+    [-4, -30, 2.6],
+    [10, -28, 1.8],
+    [-11, -24, 1.6],
+    [3, -22, 2.1],
   ] as const) {
     ctx.beginPath()
     ctx.arc(x, y, r, 0, TAU)
     ctx.fill()
   }
 
-  // Eyes
-  ctx.fillStyle = '#fff'
+  // Red necktie
+  ctx.fillStyle = '#dc2626'
   ctx.beginPath()
-  ctx.arc(-5, -28, 4.2, 0, TAU)
-  ctx.arc(5, -28, 4.2, 0, TAU)
-  ctx.fill()
-  ctx.fillStyle = '#0f172a'
-  ctx.beginPath()
-  ctx.arc(-4, -28, 1.6, 0, TAU)
-  ctx.arc(6, -28, 1.6, 0, TAU)
+  ctx.moveTo(0, -19)
+  ctx.lineTo(-3.5, -16)
+  ctx.lineTo(0, -8)
+  ctx.lineTo(3.5, -16)
+  ctx.closePath()
   ctx.fill()
 
-  // Smile
-  ctx.strokeStyle = '#0f172a'
-  ctx.lineWidth = 1.3
+  // Eyes with lashes
+  ctx.fillStyle = '#fff'
   ctx.beginPath()
-  ctx.arc(0, -20, 5, 0.15, Math.PI - 0.15)
+  ctx.arc(-5.5, -34, 5.2, 0, TAU)
+  ctx.arc(5.5, -34, 5.2, 0, TAU)
+  ctx.fill()
+  ctx.strokeStyle = '#111827'
+  ctx.lineWidth = 1.2
+  ctx.stroke()
+  ctx.fillStyle = '#111827'
+  ctx.beginPath()
+  ctx.arc(-4.2, -34, 2, 0, TAU)
+  ctx.arc(6.8, -34, 2, 0, TAU)
+  ctx.fill()
+  // Lashes
+  ctx.beginPath()
+  ctx.moveTo(-9, -38)
+  ctx.lineTo(-11, -41)
+  ctx.moveTo(-5.5, -39.5)
+  ctx.lineTo(-5.5, -43)
+  ctx.moveTo(-2, -38)
+  ctx.lineTo(0, -41)
+  ctx.moveTo(2, -38)
+  ctx.lineTo(0.5, -41)
+  ctx.moveTo(5.5, -39.5)
+  ctx.lineTo(5.5, -43)
+  ctx.moveTo(9, -38)
+  ctx.lineTo(11, -41)
   ctx.stroke()
 
-  // Shorts
+  // Freckles + smile + buck teeth
   ctx.fillStyle = '#b45309'
-  roundRect(ctx, -14, -12, 28, 8, 2)
-  ctx.fill()
+  for (const [x, y] of [
+    [-8, -26],
+    [-5, -24],
+    [6, -26],
+    [9, -24],
+  ] as const) {
+    ctx.beginPath()
+    ctx.arc(x, y, 1.1, 0, TAU)
+    ctx.fill()
+  }
+  ctx.strokeStyle = '#111827'
+  ctx.lineWidth = 1.4
+  ctx.beginPath()
+  ctx.arc(0, -25, 6.5, 0.15, Math.PI - 0.15)
+  ctx.stroke()
   ctx.fillStyle = '#fff'
-  ctx.fillRect(-14, -12, 28, 2.2)
+  ctx.fillRect(-3.2, -24.5, 3, 3.2)
+  ctx.fillRect(0.2, -24.5, 3, 3.2)
+  ctx.strokeStyle = '#111827'
+  ctx.strokeRect(-3.2, -24.5, 3, 3.2)
+  ctx.strokeRect(0.2, -24.5, 3, 3.2)
 }
 
 function drawStar(ctx: CanvasRenderingContext2D, phase: number) {
-  const wiggle = Math.sin(phase) * 0.08
+  const wiggle = Math.sin(phase) * 0.1
   ctx.rotate(wiggle)
 
+  // Soft chubby star body (less pointy = more Patrick-like)
   ctx.beginPath()
   for (let i = 0; i < 5; i++) {
     const a = -Math.PI / 2 + (i * TAU) / 5
     const b = a + TAU / 10
-    ctx.lineTo(Math.cos(a) * 18, Math.sin(a) * 18 - 16)
-    ctx.lineTo(Math.cos(b) * 8, Math.sin(b) * 8 - 16)
+    ctx.lineTo(Math.cos(a) * 20, Math.sin(a) * 18 - 18)
+    ctx.lineTo(Math.cos(b) * 10, Math.sin(b) * 9 - 18)
   }
   ctx.closePath()
   ctx.fillStyle = '#fb7185'
   ctx.fill()
   ctx.strokeStyle = '#be123c'
-  ctx.lineWidth = 1.3
+  ctx.lineWidth = 1.5
   ctx.stroke()
 
-  ctx.fillStyle = '#fff'
+  // Belly highlight
+  ctx.fillStyle = '#fda4af'
   ctx.beginPath()
-  ctx.arc(-4, -20, 3.2, 0, TAU)
-  ctx.arc(4, -20, 3.2, 0, TAU)
-  ctx.fill()
-  ctx.fillStyle = '#0f172a'
-  ctx.beginPath()
-  ctx.arc(-3.2, -20, 1.3, 0, TAU)
-  ctx.arc(4.8, -20, 1.3, 0, TAU)
+  ctx.ellipse(0, -14, 8, 6, 0, 0, TAU)
   ctx.fill()
 
-  ctx.strokeStyle = '#0f172a'
+  // Flower shorts
+  ctx.fillStyle = '#22c55e'
   ctx.beginPath()
-  ctx.moveTo(-3, -13)
-  ctx.quadraticCurveTo(0, -10, 3, -13)
+  ctx.moveTo(-10, -12)
+  ctx.quadraticCurveTo(0, -6, 10, -12)
+  ctx.lineTo(9, -2)
+  ctx.quadraticCurveTo(0, 2, -9, -2)
+  ctx.closePath()
+  ctx.fill()
+  ctx.fillStyle = '#f472b6'
+  for (const [x, y] of [
+    [-4, -7],
+    [3, -5],
+    [-1, -3],
+  ] as const) {
+    ctx.beginPath()
+    ctx.arc(x, y, 1.6, 0, TAU)
+    ctx.fill()
+  }
+
+  // Face
+  ctx.fillStyle = '#fff'
+  ctx.beginPath()
+  ctx.arc(-5, -22, 3.6, 0, TAU)
+  ctx.arc(5, -22, 3.6, 0, TAU)
+  ctx.fill()
+  ctx.fillStyle = '#111827'
+  ctx.beginPath()
+  ctx.arc(-4, -22, 1.5, 0, TAU)
+  ctx.arc(6, -22, 1.5, 0, TAU)
+  ctx.fill()
+  // Eyebrows
+  ctx.strokeStyle = '#111827'
+  ctx.lineWidth = 1.5
+  ctx.beginPath()
+  ctx.moveTo(-8, -27)
+  ctx.lineTo(-2, -26)
+  ctx.moveTo(2, -26)
+  ctx.lineTo(8, -27)
+  ctx.stroke()
+  // Smile
+  ctx.beginPath()
+  ctx.arc(0, -16, 4.5, 0.2, Math.PI - 0.2)
   ctx.stroke()
 }
 
 function drawTentacle(ctx: CanvasRenderingContext2D, phase: number) {
-  // Legs / tentacles
-  ctx.strokeStyle = '#15803d'
-  ctx.lineWidth = 4
+  // Four walking tentacles
+  ctx.strokeStyle = '#4d7c0f'
+  ctx.lineWidth = 4.2
   ctx.lineCap = 'round'
   for (let i = 0; i < 4; i++) {
-    const sway = Math.sin(phase + i) * 4
+    const sway = Math.sin(phase + i * 0.9) * 5
+    const x0 = -9 + i * 6
     ctx.beginPath()
-    ctx.moveTo(-8 + i * 5, -10)
-    ctx.quadraticCurveTo(-10 + i * 5 + sway, 2, -12 + i * 5 + sway * 1.2, 10)
+    ctx.moveTo(x0, -12)
+    ctx.quadraticCurveTo(x0 - 2 + sway, 2, x0 - 4 + sway * 1.3, 12)
     ctx.stroke()
   }
 
-  // Body
-  ctx.fillStyle = '#22c55e'
+  // Tall forehead head
+  ctx.fillStyle = '#65a30d'
   ctx.beginPath()
-  ctx.ellipse(0, -28, 16, 20, 0, 0, TAU)
+  ctx.moveTo(-14, -18)
+  ctx.bezierCurveTo(-16, -52, 16, -52, 14, -18)
+  ctx.quadraticCurveTo(0, -14, -14, -18)
+  ctx.closePath()
   ctx.fill()
-  ctx.strokeStyle = '#166534'
-  ctx.lineWidth = 1.4
+  ctx.strokeStyle = '#3f6212'
+  ctx.lineWidth = 1.5
   ctx.stroke()
 
-  // Nose
-  ctx.fillStyle = '#86efac'
+  // Big nose
+  ctx.fillStyle = '#a3e635'
   ctx.beginPath()
-  ctx.ellipse(10, -28, 8, 5, 0.2, 0, TAU)
+  ctx.ellipse(11, -30, 9, 5.5, 0.15, 0, TAU)
   ctx.fill()
-  ctx.strokeStyle = '#166534'
+  ctx.strokeStyle = '#3f6212'
   ctx.stroke()
 
   // Eyes
   ctx.fillStyle = '#fff'
   ctx.beginPath()
-  ctx.arc(-4, -34, 4, 0, TAU)
-  ctx.arc(3, -34, 4, 0, TAU)
+  ctx.ellipse(-4, -36, 4.5, 5, 0, 0, TAU)
+  ctx.ellipse(4, -36, 4.5, 5, 0, 0, TAU)
   ctx.fill()
-  ctx.fillStyle = '#0f172a'
+  ctx.fillStyle = '#111827'
   ctx.beginPath()
-  ctx.arc(-3, -34, 1.5, 0, TAU)
-  ctx.arc(4, -34, 1.5, 0, TAU)
+  ctx.arc(-3, -36, 1.7, 0, TAU)
+  ctx.arc(5, -36, 1.7, 0, TAU)
   ctx.fill()
 
-  // Shirt
-  ctx.fillStyle = '#38bdf8'
-  roundRect(ctx, -12, -18, 24, 10, 3)
+  // Unimpressed brows
+  ctx.strokeStyle = '#111827'
+  ctx.lineWidth = 1.8
+  ctx.beginPath()
+  ctx.moveTo(-9, -42)
+  ctx.lineTo(-1, -40)
+  ctx.moveTo(1, -40)
+  ctx.lineTo(9, -42)
+  ctx.stroke()
+
+  // Mouth
+  ctx.beginPath()
+  ctx.moveTo(-4, -24)
+  ctx.quadraticCurveTo(0, -22, 4, -24)
+  ctx.stroke()
+
+  // Turquoise shirt + collar
+  ctx.fillStyle = '#2dd4bf'
+  roundRect(ctx, -13, -18, 26, 12, 3)
+  ctx.fill()
+  ctx.fillStyle = '#fff'
+  ctx.beginPath()
+  ctx.moveTo(-4, -18)
+  ctx.lineTo(0, -13)
+  ctx.lineTo(4, -18)
   ctx.fill()
 }
 
 function drawCrab(ctx: CanvasRenderingContext2D, phase: number) {
-  const pinch = Math.sin(phase) * 0.25
+  const pinch = Math.sin(phase) * 0.3
 
   // Legs
   ctx.strokeStyle = '#b91c1c'
-  ctx.lineWidth = 2.4
+  ctx.lineWidth = 2.6
   ctx.lineCap = 'round'
   for (const side of [-1, 1]) {
     for (let i = 0; i < 3; i++) {
       ctx.beginPath()
-      ctx.moveTo(side * 8, -10)
-      ctx.lineTo(side * (14 + i * 2), -2 + i + Math.sin(phase + i) * 1.5)
+      ctx.moveTo(side * 9, -12)
+      ctx.lineTo(side * (16 + i * 2.5), -1 + i + Math.sin(phase + i) * 1.8)
       ctx.stroke()
     }
   }
 
-  // Claws
+  // Big claws
   for (const side of [-1, 1] as const) {
     ctx.save()
-    ctx.translate(side * 16, -18)
-    ctx.rotate(side * (0.4 + pinch))
-    ctx.fillStyle = '#ef4444'
+    ctx.translate(side * 18, -22)
+    ctx.rotate(side * (0.35 + pinch))
+    ctx.fillStyle = '#dc2626'
     ctx.beginPath()
-    ctx.ellipse(0, 0, 7, 5, 0, 0, TAU)
+    ctx.ellipse(0, 0, 9, 6.5, 0, 0, TAU)
     ctx.fill()
     ctx.fillStyle = '#fecaca'
     ctx.beginPath()
-    ctx.moveTo(2, -2)
-    ctx.lineTo(10, -6)
-    ctx.lineTo(9, 1)
+    ctx.moveTo(3, -3)
+    ctx.lineTo(14, -8)
+    ctx.quadraticCurveTo(16, 0, 12, 6)
+    ctx.lineTo(3, 3)
     ctx.closePath()
     ctx.fill()
+    ctx.strokeStyle = '#7f1d1d'
+    ctx.lineWidth = 1.2
+    ctx.stroke()
     ctx.restore()
   }
 
-  // Body
-  ctx.fillStyle = '#dc2626'
+  // Blue collar shirt
+  ctx.fillStyle = '#1d4ed8'
+  roundRect(ctx, -12, -20, 24, 10, 3)
+  ctx.fill()
+  ctx.fillStyle = '#fff'
   ctx.beginPath()
-  ctx.ellipse(0, -16, 14, 10, 0, 0, TAU)
+  ctx.moveTo(-5, -20)
+  ctx.lineTo(0, -15)
+  ctx.lineTo(5, -20)
+  ctx.fill()
+
+  // Round red body
+  ctx.fillStyle = '#ef4444'
+  ctx.beginPath()
+  ctx.ellipse(0, -26, 15, 12, 0, 0, TAU)
   ctx.fill()
   ctx.strokeStyle = '#7f1d1d'
-  ctx.lineWidth = 1.3
+  ctx.lineWidth = 1.4
   ctx.stroke()
 
-  // Eyes on stalks
-  ctx.strokeStyle = '#7f1d1d'
-  ctx.lineWidth = 2
+  // Tall eyestalks
+  ctx.strokeStyle = '#b91c1c'
+  ctx.lineWidth = 2.4
   ctx.beginPath()
-  ctx.moveTo(-5, -22)
-  ctx.lineTo(-6, -30)
-  ctx.moveTo(5, -22)
-  ctx.lineTo(6, -30)
+  ctx.moveTo(-5, -34)
+  ctx.lineTo(-7, -46)
+  ctx.moveTo(5, -34)
+  ctx.lineTo(7, -46)
   ctx.stroke()
   ctx.fillStyle = '#fff'
   ctx.beginPath()
-  ctx.arc(-6, -31, 3.2, 0, TAU)
-  ctx.arc(6, -31, 3.2, 0, TAU)
+  ctx.arc(-7, -48, 4, 0, TAU)
+  ctx.arc(7, -48, 4, 0, TAU)
   ctx.fill()
-  ctx.fillStyle = '#0f172a'
+  ctx.strokeStyle = '#111827'
+  ctx.lineWidth = 1.1
+  ctx.stroke()
+  ctx.fillStyle = '#111827'
   ctx.beginPath()
-  ctx.arc(-5.2, -31, 1.3, 0, TAU)
-  ctx.arc(6.8, -31, 1.3, 0, TAU)
+  ctx.arc(-6, -48, 1.7, 0, TAU)
+  ctx.arc(8, -48, 1.7, 0, TAU)
   ctx.fill()
 
-  // Tiny nose
+  // Nose + smile
   ctx.fillStyle = '#fecaca'
   ctx.beginPath()
-  ctx.arc(0, -15, 2.2, 0, TAU)
+  ctx.ellipse(0, -24, 3.2, 2.4, 0, 0, TAU)
   ctx.fill()
+  ctx.strokeStyle = '#7f1d1d'
+  ctx.lineWidth = 1.3
+  ctx.beginPath()
+  ctx.arc(0, -20, 5, 0.15, Math.PI - 0.15)
+  ctx.stroke()
 }
 
 function roundRect(

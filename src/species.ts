@@ -1457,4 +1457,245 @@ export const SPECIES: readonly Species[] = [
       eye(ctx, 0.2, -0.13, 0.03, '#a3e635')
     },
   },
+  {
+    id: 'sea-turtle',
+    name: '海龟',
+    fact: '慢悠悠地在沙滩附近划水',
+    size: [48, 64],
+    speed: [14, 22],
+    zone: 'floor',
+    style: 'bottom',
+    tailHz: 1.1,
+    mouth: [0.42, 0.02],
+    halfHeight: 0.28,
+    floor: 0.16,
+    chase: 240,
+    upright: true,
+    draw(ctx, p) {
+      const flap = Math.sin(p.phase) * 0.35
+      // Flippers
+      for (const side of [-1, 1] as const) {
+        ctx.save()
+        ctx.translate(0.02, side * 0.02)
+        ctx.rotate(side * (0.55 + flap * 0.25))
+        oval(ctx, -0.02, side * 0.18, 0.16, 0.055)
+        paint(ctx, '#3f6b4a', '#1f3a28', 1.1 * p.px)
+        ctx.restore()
+      }
+      // Hind flippers
+      for (const side of [-1, 1] as const) {
+        ctx.save()
+        ctx.translate(-0.22, 0)
+        ctx.rotate(side * (0.9 - flap * 0.15))
+        oval(ctx, 0, side * 0.08, 0.08, 0.03)
+        paint(ctx, '#3f6b4a')
+        ctx.restore()
+      }
+      // Shell
+      const shell = () => oval(ctx, -0.02, 0, 0.3, 0.2)
+      shell()
+      paint(ctx, vertical(ctx, 'sea-turtle', -0.2, 0.2, [[0, '#2f5d3a'], [0.55, '#4f8a55'], [1, '#7bb06a']]))
+      clipped(ctx, shell, () => {
+        ctx.strokeStyle = 'rgba(20, 50, 28, 0.55)'
+        ctx.lineWidth = 1.4 * p.px
+        ctx.beginPath()
+        ctx.moveTo(-0.02, -0.18)
+        ctx.lineTo(-0.02, 0.18)
+        ctx.moveTo(-0.22, 0)
+        ctx.lineTo(0.2, 0)
+        for (const y of [-0.1, 0.1]) {
+          ctx.moveTo(-0.18, y)
+          ctx.quadraticCurveTo(-0.02, y * 1.15, 0.16, y)
+        }
+        ctx.stroke()
+      })
+      // Head
+      oval(ctx, 0.34, 0, 0.1, 0.07)
+      paint(ctx, '#6f9a5a')
+      eye(ctx, 0.38, -0.025, 0.028)
+      // Beak tip
+      poly(ctx, [0.42, -0.01, 0.5, 0.01, 0.42, 0.03])
+      paint(ctx, '#d9e3c8')
+    },
+  },
+  {
+    id: 'hawksbill',
+    name: '玳瑁',
+    fact: '壳上的花纹像碎瓷片',
+    size: [42, 56],
+    speed: [16, 24],
+    zone: 'floor',
+    style: 'bottom',
+    tailHz: 1.2,
+    mouth: [0.44, 0.01],
+    halfHeight: 0.26,
+    floor: 0.15,
+    chase: 230,
+    upright: true,
+    draw(ctx, p) {
+      const flap = Math.sin(p.phase + 0.4) * 0.3
+      for (const side of [-1, 1] as const) {
+        ctx.save()
+        ctx.translate(0.04, 0)
+        ctx.rotate(side * (0.5 + flap * 0.2))
+        oval(ctx, -0.04, side * 0.16, 0.14, 0.045)
+        paint(ctx, '#6b4f2a', '#3b2a14', p.px)
+        ctx.restore()
+      }
+      const shell = () => oval(ctx, -0.04, 0, 0.28, 0.18)
+      shell()
+      paint(ctx, '#8a6230')
+      clipped(ctx, shell, () => {
+        ctx.fillStyle = '#c48a3a'
+        for (const [x, y, r] of [
+          [-0.14, -0.06, 0.07],
+          [0.02, -0.08, 0.06],
+          [0.12, 0.02, 0.055],
+          [-0.08, 0.07, 0.06],
+          [0.05, 0.08, 0.05],
+          [-0.18, 0.02, 0.05],
+        ] as const) {
+          circle(ctx, x, y, r)
+          ctx.fill()
+        }
+        ctx.strokeStyle = 'rgba(60, 35, 10, 0.55)'
+        ctx.lineWidth = 1.2 * p.px
+        ctx.beginPath()
+        ctx.moveTo(-0.04, -0.16)
+        ctx.lineTo(-0.04, 0.16)
+        ctx.moveTo(-0.24, 0)
+        ctx.lineTo(0.18, 0)
+        ctx.stroke()
+      })
+      oval(ctx, 0.32, 0, 0.1, 0.065)
+      paint(ctx, '#a67b3d')
+      // Hooked beak
+      poly(ctx, [0.4, -0.02, 0.52, 0.01, 0.4, 0.035, 0.38, 0.01])
+      paint(ctx, '#e8d5a8')
+      eye(ctx, 0.36, -0.02, 0.025)
+    },
+  },
+  {
+    id: 'sea-snake',
+    name: '海蛇',
+    fact: '身体细长，贴着沙面扭动',
+    size: [90, 120],
+    speed: [22, 32],
+    zone: 'floor',
+    style: 'eel',
+    tailHz: 1.4,
+    mouth: [0.5, 0.0],
+    halfHeight: 0.12,
+    floor: 0.08,
+    chase: 280,
+    draw(ctx, p) {
+      const spine: Point[] = []
+      const widths: number[] = []
+      for (let i = 0; i <= 18; i++) {
+        const t = i / 18
+        spine.push({
+          x: 0.48 - t,
+          y: Math.sin(p.phase - t * 7) * (0.015 + 0.05 * t),
+        })
+        widths.push(t < 0.1 ? 0.04 + t * 0.15 : 0.055 * (1 - t) + 0.01)
+      }
+      ribbon(ctx, spine, widths.map((w, i) => w + (i > 2 ? 0.012 : 0)))
+      paint(ctx, 'rgba(40, 90, 120, 0.35)')
+      ribbon(ctx, spine, widths)
+      paint(ctx, vertical(ctx, 'sea-snake', -0.08, 0.08, [[0, '#0f3d5c'], [0.5, '#1f6f8f'], [1, '#7ec8c3']]))
+      clipped(ctx, () => ribbon(ctx, spine, widths), () => {
+        ctx.fillStyle = '#f8fafc'
+        for (let i = 2; i < 17; i += 2) {
+          const pt = spine[i]
+          ctx.fillRect(pt.x - 0.018, pt.y - widths[i], 0.036, widths[i] * 2)
+        }
+      })
+      const head = spine[0]
+      oval(ctx, head.x + 0.02, head.y, 0.055, 0.04)
+      paint(ctx, '#1f6f8f')
+      eye(ctx, head.x + 0.03, head.y - 0.015, 0.018)
+      // Tiny tongue flick
+      ctx.strokeStyle = '#ef4444'
+      ctx.lineWidth = 1.2 * p.px
+      ctx.beginPath()
+      ctx.moveTo(head.x + 0.06, head.y)
+      ctx.lineTo(head.x + 0.1, head.y - 0.01 + Math.sin(p.phase * 3) * 0.01)
+      ctx.stroke()
+    },
+  },
+  {
+    id: 'alligator-turtle',
+    name: '鳄龟',
+    fact: '大嘴巴，喜欢趴在沙子上',
+    size: [50, 68],
+    speed: [10, 16],
+    zone: 'floor',
+    style: 'bottom',
+    tailHz: 0.8,
+    mouth: [0.46, 0.04],
+    halfHeight: 0.3,
+    floor: 0.18,
+    chase: 200,
+    upright: true,
+    draw(ctx, p) {
+      // Spiky shell
+      const shell = () => {
+        ctx.beginPath()
+        ctx.moveTo(-0.28, 0.02)
+        for (let i = 0; i <= 8; i++) {
+          const t = i / 8
+          const x = -0.28 + t * 0.5
+          const y = -0.16 * Math.sin(Math.PI * t) - (i % 2 === 0 ? 0.04 : 0)
+          ctx.lineTo(x, y)
+        }
+        ctx.lineTo(0.22, 0.1)
+        ctx.lineTo(-0.28, 0.1)
+        ctx.closePath()
+      }
+      shell()
+      paint(ctx, vertical(ctx, 'alligator-turtle', -0.2, 0.12, [[0, '#3f4a2a'], [1, '#6b7340']]), '#2a3318', 1.2 * p.px)
+      // Ridges
+      ctx.strokeStyle = 'rgba(20, 28, 12, 0.5)'
+      ctx.lineWidth = 1.3 * p.px
+      for (const x of [-0.14, -0.02, 0.1]) {
+        ctx.beginPath()
+        ctx.moveTo(x, -0.14)
+        ctx.lineTo(x - 0.02, 0.08)
+        ctx.stroke()
+      }
+      // Legs
+      for (const [x, y, a] of [
+        [0.08, 0.1, 0.4],
+        [-0.12, 0.1, 0.6],
+        [0.16, 0.08, -0.3],
+        [-0.18, 0.08, -0.5],
+      ] as const) {
+        ctx.save()
+        ctx.translate(x, y)
+        ctx.rotate(a + Math.sin(p.phase) * 0.1)
+        oval(ctx, 0, 0, 0.07, 0.03)
+        paint(ctx, '#4b5320')
+        ctx.restore()
+      }
+      // Huge head
+      oval(ctx, 0.34, 0.02, 0.14, 0.1)
+      paint(ctx, '#5a6340')
+      // Beak / jaws
+      poly(ctx, [0.44, -0.02, 0.58, 0.03, 0.44, 0.08, 0.4, 0.03])
+      paint(ctx, '#c4b48a')
+      ctx.strokeStyle = '#3b2f14'
+      ctx.lineWidth = 1.1 * p.px
+      ctx.beginPath()
+      ctx.moveTo(0.44, 0.03)
+      ctx.lineTo(0.56, 0.03)
+      ctx.stroke()
+      eye(ctx, 0.36, -0.04, 0.03, '#111827')
+      // Tiny dorsal spikes on neck
+      ctx.fillStyle = '#2f361c'
+      for (const x of [0.26, 0.3, 0.34]) {
+        poly(ctx, [x, -0.08, x + 0.015, -0.14, x + 0.03, -0.08])
+        ctx.fill()
+      }
+    },
+  },
 ]
