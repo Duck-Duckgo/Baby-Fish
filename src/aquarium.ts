@@ -370,6 +370,14 @@ export class Aquarium {
     return visitor
   }
 
+  /** Spawns the round-faced hunter immediately (used by `?monster` preview). */
+  spawnMonsterNow(): Monster | null {
+    if (this.width === 0) return null
+    this.monster = createMonster(this.width, this.height, this.sandBase, this.fishScale)
+    this.monsterTimer = 1e9
+    return this.monster
+  }
+
   update(dt: number) {
     if (this.width === 0) return
 

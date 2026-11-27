@@ -179,62 +179,143 @@ function drawPineappleHouse(ctx: CanvasRenderingContext2D) {
 }
 
 function drawBurgerStand(ctx: CanvasRenderingContext2D) {
-  // Roof (boat-like hull, no lettering)
+  // Boat-hull restaurant: pointed bow/stern, red cabin roof, mast sign, chimney.
+
+  // Hull / lower body (treasure-chest boat silhouette)
+  ctx.fillStyle = '#c4a574'
+  ctx.beginPath()
+  ctx.moveTo(-48, -8)
+  ctx.lineTo(-42, -40)
+  ctx.lineTo(42, -40)
+  ctx.lineTo(48, -8)
+  ctx.quadraticCurveTo(0, 8, -48, -8)
+  ctx.closePath()
+  ctx.fill()
+  ctx.strokeStyle = '#7c5a2a'
+  ctx.lineWidth = 1.6
+  ctx.stroke()
+
+  // Hull planks
+  ctx.strokeStyle = 'rgba(90, 55, 20, 0.35)'
+  ctx.lineWidth = 1
+  for (const y of [-32, -24, -16]) {
+    ctx.beginPath()
+    ctx.moveTo(-40, y)
+    ctx.lineTo(40, y)
+    ctx.stroke()
+  }
+
+  // Metal bands
+  ctx.strokeStyle = '#92400e'
+  ctx.lineWidth = 2.2
+  ctx.beginPath()
+  ctx.moveTo(-44, -28)
+  ctx.quadraticCurveTo(0, -22, 44, -28)
+  ctx.moveTo(-46, -14)
+  ctx.quadraticCurveTo(0, -8, 46, -14)
+  ctx.stroke()
+
+  // Red roof (boat cabin lid)
   ctx.fillStyle = '#b91c1c'
   ctx.beginPath()
-  ctx.moveTo(-46, -58)
-  ctx.quadraticCurveTo(0, -78, 46, -58)
-  ctx.lineTo(40, -42)
-  ctx.lineTo(-40, -42)
+  ctx.moveTo(-44, -40)
+  ctx.lineTo(-36, -62)
+  ctx.lineTo(36, -62)
+  ctx.lineTo(44, -40)
   ctx.closePath()
   ctx.fill()
-
-  ctx.fillStyle = '#f8fafc'
-  ctx.beginPath()
-  ctx.moveTo(-34, -56)
-  ctx.quadraticCurveTo(0, -68, 34, -56)
-  ctx.lineTo(30, -46)
-  ctx.lineTo(-30, -46)
-  ctx.closePath()
-  ctx.fill()
-
-  // Cabin
-  ctx.fillStyle = '#fef3c7'
-  roundRect(ctx, -36, -42, 72, 42, 6)
-  ctx.fill()
-  ctx.strokeStyle = '#92400e'
+  ctx.strokeStyle = '#7f1d1d'
   ctx.lineWidth = 1.4
   ctx.stroke()
 
-  // Counter window
-  ctx.fillStyle = '#38bdf8'
-  roundRect(ctx, -22, -34, 44, 18, 4)
+  // Roof ridge highlight
+  ctx.fillStyle = '#ef4444'
+  ctx.beginPath()
+  ctx.moveTo(-30, -58)
+  ctx.lineTo(0, -64)
+  ctx.lineTo(30, -58)
+  ctx.lineTo(26, -54)
+  ctx.lineTo(0, -58)
+  ctx.lineTo(-26, -54)
+  ctx.closePath()
   ctx.fill()
 
-  // Chimney puff
-  ctx.fillStyle = '#78716c'
-  roundRect(ctx, 22, -70, 10, 16, 2)
+  // Cabin windows (porthole row)
+  for (const x of [-18, 0, 18]) {
+    ctx.fillStyle = '#7dd3fc'
+    ctx.beginPath()
+    ctx.arc(x, -48, 6, 0, TAU)
+    ctx.fill()
+    ctx.strokeStyle = '#0e7490'
+    ctx.lineWidth = 1.3
+    ctx.stroke()
+    ctx.fillStyle = 'rgba(255,255,255,0.55)'
+    ctx.beginPath()
+    ctx.arc(x - 2, -50, 2, 0, TAU)
+    ctx.fill()
+  }
+
+  // Door
+  ctx.fillStyle = '#1e3a5f'
+  roundRect(ctx, -8, -30, 16, 22, 2)
+  ctx.fill()
+  ctx.fillStyle = '#fbbf24'
+  ctx.beginPath()
+  ctx.arc(4, -18, 1.6, 0, TAU)
+  ctx.fill()
+
+  // Smokestack / chimney
+  ctx.fillStyle = '#6b7280'
+  roundRect(ctx, 22, -86, 12, 26, 2)
+  ctx.fill()
+  ctx.fillStyle = '#4b5563'
+  roundRect(ctx, 20, -90, 16, 6, 2)
   ctx.fill()
   ctx.fillStyle = 'rgba(255,255,255,0.55)'
   ctx.beginPath()
-  ctx.arc(30, -78, 6, 0, TAU)
-  ctx.arc(36, -84, 4, 0, TAU)
+  ctx.arc(32, -96, 5, 0, TAU)
+  ctx.arc(38, -102, 3.5, 0, TAU)
+  ctx.arc(34, -108, 2.5, 0, TAU)
   ctx.fill()
 
-  // Sign board with a simple burger doodle (no brand text)
-  ctx.fillStyle = '#f59e0b'
-  roundRect(ctx, -18, -88, 36, 16, 4)
-  ctx.fill()
-  ctx.fillStyle = '#7c2d12'
+  // Mast + sign board (burger doodle only — no brand letters)
+  ctx.strokeStyle = '#78716c'
+  ctx.lineWidth = 2.4
   ctx.beginPath()
-  ctx.ellipse(0, -82, 10, 4, 0, 0, TAU)
+  ctx.moveTo(-6, -62)
+  ctx.lineTo(-6, -108)
+  ctx.stroke()
+  ctx.fillStyle = '#f59e0b'
+  roundRect(ctx, -28, -112, 44, 20, 4)
+  ctx.fill()
+  ctx.strokeStyle = '#b45309'
+  ctx.lineWidth = 1.3
+  ctx.stroke()
+  // Burger icon on sign
+  ctx.fillStyle = '#92400e'
+  ctx.beginPath()
+  ctx.ellipse(-6, -104, 12, 4.5, 0, 0, TAU)
   ctx.fill()
   ctx.fillStyle = '#22c55e'
-  ctx.fillRect(-8, -83, 16, 2)
-  ctx.fillStyle = '#fef3c7'
+  ctx.fillRect(-16, -105, 20, 2.2)
+  ctx.fillStyle = '#ef4444'
+  ctx.fillRect(-15, -102.5, 18, 2)
+  ctx.fillStyle = '#fde68a'
   ctx.beginPath()
-  ctx.ellipse(0, -79, 10, 3.5, 0, 0, TAU)
+  ctx.ellipse(-6, -99, 12, 3.8, 0, 0, TAU)
   ctx.fill()
+
+  // Anchor decoration on bow (left)
+  ctx.strokeStyle = '#57534e'
+  ctx.lineWidth = 1.6
+  ctx.beginPath()
+  ctx.arc(-40, -36, 4, 0, TAU)
+  ctx.moveTo(-40, -32)
+  ctx.lineTo(-40, -22)
+  ctx.moveTo(-44, -24)
+  ctx.lineTo(-40, -22)
+  ctx.lineTo(-36, -24)
+  ctx.stroke()
 }
 
 function drawSponge(ctx: CanvasRenderingContext2D, phase: number) {

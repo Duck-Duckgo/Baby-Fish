@@ -149,129 +149,179 @@ export function drawMonster(ctx: CanvasRenderingContext2D, m: Monster) {
   ctx.save()
   ctx.translate(m.x, m.y)
   ctx.scale(m.facing * m.scale, m.scale)
-  const chew = m.phase === 'eat' ? Math.sin(m.age * 18) * 2 : 0
+  const menacing = m.phase === 'enter' || m.phase === 'chase' || m.phase === 'eat'
+  const chew = m.phase === 'eat' ? Math.sin(m.age * 18) * 1.5 : 0
+  const pulse = 0.85 + 0.15 * Math.sin(m.age * 8)
 
-  // Shadow
-  ctx.fillStyle = 'rgba(10, 30, 50, 0.18)'
+  // Lightning / pressure aura (stronger on enter & chase)
+  if (menacing) {
+    const bolts = [
+      [-28, -38, -42, -62, -34, -48],
+      [26, -40, 44, -66, 32, -50],
+      [-8, -48, -6, -72, 4, -58],
+      [10, -46, 18, -70, 6, -56],
+      [-34, -18, -56, -28, -44, -10],
+      [34, -16, 58, -30, 46, -6],
+    ] as const
+    ctx.save()
+    ctx.globalAlpha = (m.phase === 'enter' ? 0.95 : 0.7) * pulse
+    for (const [x0, y0, x1, y1, x2, y2] of bolts) {
+      ctx.beginPath()
+      ctx.moveTo(x0, y0)
+      ctx.lineTo(x1, y1)
+      ctx.lineTo(x2, y2)
+      ctx.closePath()
+      ctx.fillStyle = '#7dd3fc'
+      ctx.fill()
+      ctx.strokeStyle = '#e0f2fe'
+      ctx.lineWidth = 1.2
+      ctx.stroke()
+    }
+    // Dark pressure halo
+    ctx.globalAlpha = m.phase === 'enter' ? 0.35 : 0.2
+    const halo = ctx.createRadialGradient(0, -12, 8, 0, -12, 48)
+    halo.addColorStop(0, 'rgba(30, 20, 60, 0.55)')
+    halo.addColorStop(1, 'rgba(30, 20, 60, 0)')
+    ctx.fillStyle = halo
+    ctx.beginPath()
+    ctx.arc(0, -12, 48, 0, TAU)
+    ctx.fill()
+    ctx.restore()
+  }
+
+  // Ground shadow
+  ctx.fillStyle = 'rgba(10, 30, 50, 0.2)'
   ctx.beginPath()
-  ctx.ellipse(0, 22, 16, 5, 0, 0, TAU)
+  ctx.ellipse(0, 20, 14, 4.5, 0, 0, TAU)
   ctx.fill()
 
-  // Legs (short chibi)
-  ctx.strokeStyle = '#f5c9a0'
+  // Arms
+  ctx.strokeStyle = '#f2c4a0'
   ctx.lineWidth = 3.2
   ctx.lineCap = 'round'
   ctx.beginPath()
-  ctx.moveTo(-5, 10)
-  ctx.lineTo(-6, 18)
-  ctx.moveTo(5, 10)
-  ctx.lineTo(6, 18)
-  ctx.stroke()
-  ctx.fillStyle = '#fff'
-  ctx.fillRect(-9, 17, 6, 3)
-  ctx.fillRect(3, 17, 6, 3)
-  ctx.fillStyle = '#c45c26'
-  ctx.fillRect(-9, 19.5, 6, 2.5)
-  ctx.fillRect(3, 19.5, 6, 2.5)
-
-  // Arms
-  ctx.strokeStyle = '#f5c9a0'
-  ctx.lineWidth = 3
-  ctx.beginPath()
-  ctx.moveTo(-12, -2)
-  ctx.lineTo(-18, 4 + chew)
-  ctx.moveTo(12, -2)
-  ctx.lineTo(18, 2 - chew)
+  ctx.moveTo(-11, 2)
+  ctx.lineTo(-17, 8 + chew)
+  ctx.moveTo(11, 2)
+  ctx.lineTo(17, 6 - chew)
   ctx.stroke()
 
-  // Red dress
-  ctx.fillStyle = '#e11d48'
+  // Yellow sweater body
+  ctx.fillStyle = '#facc15'
   ctx.beginPath()
-  ctx.moveTo(-13, -4)
-  ctx.lineTo(-16, 12)
-  ctx.quadraticCurveTo(0, 16, 16, 12)
-  ctx.lineTo(13, -4)
+  ctx.moveTo(-13, -2)
+  ctx.lineTo(-15, 14)
+  ctx.quadraticCurveTo(0, 17, 15, 14)
+  ctx.lineTo(13, -2)
   ctx.closePath()
   ctx.fill()
-  ctx.fillStyle = '#fff'
-  ctx.fillRect(-13, -4, 26, 2.5)
+  ctx.strokeStyle = '#ca8a04'
+  ctx.lineWidth = 1.2
+  ctx.stroke()
 
-  // Head (big round)
-  ctx.fillStyle = '#f7d3b0'
+  // White pointed collar
+  ctx.fillStyle = '#fff'
   ctx.beginPath()
-  ctx.arc(0, -16, 16, 0, TAU)
+  ctx.moveTo(-8, -2)
+  ctx.lineTo(0, 5)
+  ctx.lineTo(8, -2)
+  ctx.lineTo(4, -3)
+  ctx.lineTo(0, 1)
+  ctx.lineTo(-4, -3)
+  ctx.closePath()
   ctx.fill()
   ctx.strokeStyle = '#111827'
-  ctx.lineWidth = 1.3
+  ctx.lineWidth = 1
   ctx.stroke()
 
-  // Short bob hair with side puffs
-  ctx.fillStyle = '#1f2937'
+  // Head
+  const headY = -16
+  const headR = 17
+  ctx.fillStyle = '#f6c9a8'
   ctx.beginPath()
-  ctx.arc(0, -20, 15.5, Math.PI, 0)
-  ctx.lineTo(15, -14)
-  ctx.quadraticCurveTo(12, -6, 8, -8)
-  ctx.lineTo(-8, -8)
-  ctx.quadraticCurveTo(-12, -6, -15, -14)
-  ctx.closePath()
+  ctx.arc(0, headY, headR, 0, TAU)
   ctx.fill()
-  // Side hair bulbs
-  ctx.beginPath()
-  ctx.ellipse(-14, -12, 5, 7, -0.2, 0, TAU)
-  ctx.ellipse(14, -12, 5, 7, 0.2, 0, TAU)
-  ctx.fill()
+  ctx.strokeStyle = '#111827'
+  ctx.lineWidth = 1.5
+  ctx.stroke()
 
-  // Tiny hair clips (plain dots, no logos)
-  ctx.fillStyle = '#f472b6'
+  // Face shadow band (menacing upper half)
+  ctx.save()
   ctx.beginPath()
-  ctx.arc(-7, -28, 2.2, 0, TAU)
-  ctx.arc(7, -28, 2.2, 0, TAU)
-  ctx.fill()
+  ctx.arc(0, headY, headR - 0.5, 0, TAU)
+  ctx.clip()
+  ctx.fillStyle = 'rgba(120, 72, 48, 0.55)'
+  ctx.fillRect(-headR, headY - headR, headR * 2, headR * 0.95)
+  ctx.restore()
 
-  // Eyes
+  // Hair bob + three jagged bangs
   ctx.fillStyle = '#111827'
   ctx.beginPath()
-  ctx.ellipse(-5.5, -16, 2.2, 3.2, 0, 0, TAU)
-  ctx.ellipse(5.5, -16, 2.2, 3.2, 0, 0, TAU)
+  ctx.arc(0, headY - 2, headR + 0.5, Math.PI * 1.05, -0.05, false)
+  ctx.lineTo(headR - 1, headY + 2)
+  ctx.quadraticCurveTo(12, headY + 8, 8, headY + 4)
+  ctx.lineTo(-8, headY + 4)
+  ctx.quadraticCurveTo(-12, headY + 8, -headR + 1, headY + 2)
+  ctx.closePath()
   ctx.fill()
-  ctx.fillStyle = '#fff'
+  // Side hair
   ctx.beginPath()
-  ctx.arc(-4.8, -17.2, 0.8, 0, TAU)
-  ctx.arc(6.2, -17.2, 0.8, 0, TAU)
+  ctx.ellipse(-15, headY + 2, 5.5, 8, -0.15, 0, TAU)
+  ctx.ellipse(15, headY + 2, 5.5, 8, 0.15, 0, TAU)
+  ctx.fill()
+  // Sawtooth bangs (3 triangles)
+  ctx.beginPath()
+  ctx.moveTo(-11, headY - 6)
+  ctx.lineTo(-7, headY + 5)
+  ctx.lineTo(-3, headY - 6)
+  ctx.lineTo(0, headY + 6)
+  ctx.lineTo(3, headY - 6)
+  ctx.lineTo(7, headY + 5)
+  ctx.lineTo(11, headY - 6)
+  ctx.closePath()
   ctx.fill()
 
-  // Blush
-  ctx.fillStyle = 'rgba(248, 113, 113, 0.45)'
-  ctx.beginPath()
-  ctx.ellipse(-9, -11, 3, 1.6, 0, 0, TAU)
-  ctx.ellipse(9, -11, 3, 1.6, 0, 0, TAU)
-  ctx.fill()
-
-  // Mouth
+  // Thin arched brows above shadow
   ctx.strokeStyle = '#111827'
-  ctx.lineWidth = 1.3
+  ctx.lineWidth = 1.4
+  ctx.lineCap = 'round'
   ctx.beginPath()
-  if (m.phase === 'eat') {
-    ctx.ellipse(0, -9 + chew * 0.15, 3.5, 2.8, 0, 0, TAU)
-    ctx.fillStyle = '#7f1d1d'
-    ctx.fill()
-  } else if (m.phase === 'chase') {
-    ctx.moveTo(-3, -9)
-    ctx.lineTo(3, -9)
-    ctx.stroke()
-  } else {
-    ctx.arc(0, -10, 2.8, 0.15, Math.PI - 0.15)
-    ctx.stroke()
-  }
+  ctx.moveTo(-9, headY - 7)
+  ctx.quadraticCurveTo(-5.5, headY - 10, -2, headY - 7.5)
+  ctx.moveTo(2, headY - 7.5)
+  ctx.quadraticCurveTo(5.5, headY - 10, 9, headY - 7)
+  ctx.stroke()
 
-  // Speech puff when eating
-  if (m.phase === 'eat') {
-    ctx.fillStyle = 'rgba(255,255,255,0.7)'
-    ctx.beginPath()
-    ctx.arc(18, -26, 4, 0, TAU)
-    ctx.arc(24, -32, 3, 0, TAU)
-    ctx.fill()
-  }
+  // Squinting slit eyes + pupils
+  ctx.fillStyle = '#6b7280'
+  ctx.beginPath()
+  ctx.ellipse(-5.5, headY - 1, 4.2, 1.35, 0, 0, TAU)
+  ctx.ellipse(5.5, headY - 1, 4.2, 1.35, 0, 0, TAU)
+  ctx.fill()
+  ctx.fillStyle = '#111827'
+  ctx.beginPath()
+  ctx.arc(-4.2, headY - 1, 1.15, 0, TAU)
+  ctx.arc(4.2, headY - 1, 1.15, 0, TAU)
+  ctx.fill()
+
+  // Pink circular blush
+  ctx.fillStyle = '#fb7185'
+  ctx.beginPath()
+  ctx.arc(-9.5, headY + 5, 2.8, 0, TAU)
+  ctx.arc(9.5, headY + 5, 2.8, 0, TAU)
+  ctx.fill()
+
+  // Mischievous half-moon grin
+  ctx.fillStyle = '#7f1d1d'
+  ctx.beginPath()
+  ctx.moveTo(-7, headY + 8)
+  ctx.quadraticCurveTo(0, headY + 16 + chew * 0.2, 7, headY + 8)
+  ctx.quadraticCurveTo(0, headY + 10, -7, headY + 8)
+  ctx.closePath()
+  ctx.fill()
+  ctx.strokeStyle = '#111827'
+  ctx.lineWidth = 1.2
+  ctx.stroke()
 
   ctx.restore()
 }

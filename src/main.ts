@@ -43,13 +43,18 @@ function start() {
   const area = canvas.clientWidth * canvas.clientHeight
   aquarium.populate(Math.min(12, Math.max(6, Math.round(area / 90000))))
 
-  if (import.meta.env.DEV) {
+  const params = new URLSearchParams(location.search)
+  if (import.meta.env.DEV || params.has('monster') || params.has('showcase')) {
     ;(window as Window & { __aquarium?: Aquarium }).__aquarium = aquarium
-    if (new URLSearchParams(location.search).has('showcase')) {
-      const controls = document.querySelector<HTMLElement>('.controls')
-      if (controls) controls.style.display = 'none'
-      aquarium.showcase()
-    }
+  }
+  if (params.has('showcase')) {
+    const controls = document.querySelector<HTMLElement>('.controls')
+    if (controls) controls.style.display = 'none'
+    aquarium.showcase()
+  }
+  if (params.has('monster')) {
+    // Let the tank populate one frame, then force the hunter in for screenshots.
+    requestAnimationFrame(() => aquarium.spawnMonsterNow())
   }
 
   canvas.addEventListener('pointerdown', (event) => {
